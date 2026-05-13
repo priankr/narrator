@@ -168,6 +168,9 @@ function initVoiceGallery() {
   const grid = document.getElementById('voice-grid');
   if (!grid || !filterRow) return;
 
+  const sampleTextEl = document.getElementById('sample-text-body');
+  if (sampleTextEl) sampleTextEl.textContent = SAMPLE_TEXT;
+
   // Render voice cards
   VOICES.forEach(voice => {
     const sampleUrl = `${RAW_BASE}/samples/sample-audio-${voice.name.toLowerCase()}.mp3`;
