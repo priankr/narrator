@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Narrator App</title>
+  <meta name="description" content="Convert Markdown posts into narrated MP3 audio files using a local text-to-speech engine." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/narrator.css" />
+</head>
+<body>
+
+  <!-- ── Navigation ─────────────────────────────────────────────── -->
+  <header class="site-nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">Narrator</a>
+      <nav class="nav-links">
+        <a href="#docs">Docs</a>
+        <a href="#samples">Voices</a>
+        <a href="https://github.com" target="_blank" rel="noopener" class="btn-secondary" id="nav-github">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Hero ───────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero-headline">Turn your writing<br>into audio.</h1>
+      <p class="hero-sub">
+        Narrator App converts Markdown posts into narrated MP3s using a local
+        text&#8209;to&#8209;speech engine. No internet required, no API keys, no cost.
+      </p>
+      <div class="hero-ctas">
+        <a href="#docs" class="btn-primary">Get started</a>
+        <a href="https://github.com" target="_blank" rel="noopener" class="btn-secondary" id="hero-github">View on GitHub →</a>
+      </div>
+
+      <!-- App preview card -->
+      <div class="app-preview-card" aria-hidden="true">
+        <div class="preview-header">
+          <span class="preview-dot"></span>
+          <span class="preview-dot"></span>
+          <span class="preview-dot"></span>
+          <span class="preview-title">narrator_ui.py</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-line dim">$ python narrator_ui.py</div>
+          <div class="preview-line dim">Running on local URL: http://127.0.0.1:7860</div>
+          <div class="preview-line">&nbsp;</div>
+          <div class="preview-line accent">[preprocess]   24 paragraphs</div>
+          <div class="preview-line accent">[synthesize]   paragraph 18 / 24</div>
+          <div class="preview-line accent">[mix]          complete</div>
+          <div class="preview-line accent">[encode]       complete</div>
+          <div class="preview-line">&nbsp;</div>
+          <div class="preview-line done">[done]         3m 47s  →  audio/output/my-essay.mp3</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Documentation ──────────────────────────────────────────── -->
+  <section class="docs-section" id="docs">
+    <div class="container">
+      <h2 class="section-heading">Documentation</h2>
+      <p class="section-sub">Click any card to read it inline.</p>
+
+      <div class="doc-grid" id="doc-grid">
+        <!-- Cards injected by narrator.js -->
+      </div>
+
+      <!-- Inline reading panel -->
+      <div class="doc-panel hidden" id="doc-panel">
+        <div class="doc-panel-bar">
+          <span class="doc-panel-title" id="doc-panel-title"></span>
+          <div class="doc-panel-actions">
+            <a class="btn-secondary" id="doc-github-link" href="#" target="_blank" rel="noopener">View on GitHub ↗</a>
+            <button class="doc-close" id="doc-close" aria-label="Close">✕</button>
+          </div>
+        </div>
+        <div class="doc-content" id="doc-content">
+          <div class="doc-loading" id="doc-loading">Loading…</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Voice Samples ──────────────────────────────────────────── -->
+  <section class="samples-section" id="samples">
+    <div class="container">
+      <h2 class="section-heading">Voice samples</h2>
+      <p class="section-sub">Listen to each voice before choosing one.</p>
+
+      <div class="filter-row" id="filter-row">
+        <!-- Filter chips injected by narrator.js -->
+      </div>
+
+      <div class="voice-grid" id="voice-grid">
+        <!-- Voice cards injected by narrator.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span class="footer-logo">Narrator App</span>
+      <span class="footer-license">Released under the MIT License</span>
+      <a class="footer-github" href="https://github.com" target="_blank" rel="noopener" id="footer-github">GitHub ↗</a>
+    </div>
+  </footer>
+
+  <!-- marked.js for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <script src="js/narrator.js"></script>
+</body>
+</html>

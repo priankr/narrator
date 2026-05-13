@@ -1,0 +1,33 @@
+# Models — downloaded via `python narrator.py setup`
+models/
+
+# Generated audio — pipeline working files and output
+audio/raw/
+audio/output/
+
+# User posts — keep sample.md as a demo, ignore everything else
+posts/*.md
+!posts/sample.md
+
+# Python
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtualenv
+.venv/
+venv/
+env/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

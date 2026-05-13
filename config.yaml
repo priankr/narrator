@@ -1,0 +1,30 @@
+tts:
+  provider: kokoro          # Swappable: "kokoro" (more providers coming in future)
+  #
+  # Voice ID naming convention:
+  #   First character  — accent:  a = American English,  b = British English
+  #   Second character — gender:  f = female,            m = male
+  #   Examples: af_sarah (American Female), bm_george (British Male)
+  #
+  # See wiki/voices.md for the full voice list.
+  # Run `python narrator.py voices` to list voices from your installed model.
+  #
+  voice: af_sarah
+  speed: 1.0                # Speech speed multiplier (0.5–2.0)
+  # Optional: override default model file paths
+  # model_path: models/kokoro-v0_19.onnx
+  # voices_path: models/voices.bin
+
+audio:
+  paragraph_pause_ms: 1000  # Silence inserted between paragraphs (milliseconds)
+  output_format: mp3        # Default output format: "mp3" | "m4a" | "wav"
+  normalize_loudness: true  # Match intro/outro loudness to body audio (RMS-based)
+  fade_duration_ms: 2000    # Fade out the end of intro and fade in the start of outro (ms). Set to 0 to disable.
+  volume_db: 0              # Output volume adjustment in decibels (0 = no change, +3 = louder, -3 = quieter)
+
+paths:
+  posts: posts/
+  intro: audio/intro/
+  outro: audio/outro/
+  raw_output: audio/raw/
+  final_output: audio/output/

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python narrator.py check)",
+      "Bash(python narrator.py status)",
+      "Bash(python narrator.py voices)",
+      "Bash(python narrator.py config)",
+      "Bash(python narrator.py setup --show-urls)",
+      "Bash(python narrator.py generate * --dry-run)",
+      "Bash(pytest -m \"not slow\")"
+    ]
+  }
+}
