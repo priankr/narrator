@@ -216,13 +216,65 @@ CSS = """
   --r-pill: 32px;
 }
 
+/* ── Override Gradio dark theme variables ── */
+/* Gradio 6.x sets class="dark" on the root; override its CSS vars here */
+.dark,
+.dark .gradio-container,
+.gradio-container {
+  --block-background-fill:     #ffffff;
+  --input-background-fill:     #ffffff;
+  --panel-background-fill:     #ffffff;
+  --background-fill-primary:   #ffffff;
+  --background-fill-secondary: #eeece7;
+  --body-text-color:           #212121;
+  --body-text-color-subdued:   #93939f;
+  --block-label-text-color:    #212121;
+  --block-title-text-color:    #212121;
+  --input-placeholder-color:   #93939f;
+  --border-color-primary:      #d9d9dd;
+  --border-color-accent:       #d9d9dd;
+  --checkbox-background-color: #ffffff;
+  --color-accent:              #17171c;
+  --neutral-800:               #212121;
+  --neutral-900:               #17171c;
+  --neutral-950:               #17171c;
+  --color-grey-100:            #f5f5f5;
+  --color-grey-200:            #eeece7;
+}
+
 /* ── Container ── */
 .gradio-container {
-  background: var(--c-canvas) !important;
+  background: #ffffff !important;
   font-family: var(--f-body) !important;
   max-width: 780px !important;
   margin: 0 auto !important;
   padding: 2.5rem 1.5rem 4rem !important;
+}
+
+/* ── Hard overrides for elements that ignore CSS variables ── */
+.gradio-container input[type="number"],
+.gradio-container input[type="text"],
+.gradio-container textarea,
+.gradio-container select {
+  background-color: #ffffff !important;
+  color: #212121 !important;
+}
+
+/* Radio button items (rendered as labels in Gradio) */
+.gradio-container fieldset label,
+.gradio-container .wrap label,
+.gradio-container span.wrap {
+  background-color: #ffffff !important;
+  color: #212121 !important;
+  border-color: #d9d9dd !important;
+}
+
+/* Block/panel backgrounds */
+.gradio-container .block,
+.gradio-container .form,
+.gradio-container fieldset,
+.gradio-container .gap {
+  background-color: #ffffff !important;
 }
 
 /* ── App header ── */
@@ -349,6 +401,9 @@ input[type=radio]    { accent-color: var(--c-primary) !important; }
   border-radius: var(--r-sm) !important;
   margin-top: 0.5rem;
 }
+
+/* ── Hide Gradio footer (Use via API / Built with Gradio) ── */
+footer { display: none !important; }
 """
 
 
@@ -385,7 +440,9 @@ def build_ui() -> gr.Blocks:
         gr.HTML("""
             <div id="app-header">
                 <h1>Narrator App</h1>
-                <p>Convert a Markdown post into narrated audio.</p>
+                <p>Convert a Markdown post into narrated audio.
+                   New here? Read the <a href="wiki/getting-started.md" target="_blank"
+                   style="color:#17171c;text-decoration:underline;">getting started guide</a>.</p>
             </div>
         """)
 

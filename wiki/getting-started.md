@@ -155,7 +155,29 @@ If you prefer not to use the terminal, Narrator App includes a local browser int
 python narrator_ui.py
 ```
 
-This opens a browser window where you can upload a `.md` file (or paste text directly), pick a voice with a live preview, adjust speed and pause settings, and download the finished audio — no command line needed.
+A browser window opens automatically. Here is how to use it:
+
+**1. Add your post**
+
+Use the **Upload file** tab to drag-and-drop or browse for your `.md` file. If you want to try it out without a file, switch to the **Paste text** tab and paste Markdown directly into the text area.
+
+**2. Choose a voice**
+
+Select a voice from the **Voice** dropdown. Click **Preview** to hear a short sample clip for the selected voice before committing. Use the **Speed** slider to speed up or slow down the narration (0.5× to 2.0×), and the **Paragraph pause** slider to control how long the silence between paragraphs is (0–3000 ms).
+
+**3. Set the output format**
+
+Choose **MP3** (default, works everywhere), **M4A** (smaller file, best for Apple devices), or **WAV** (lossless, use if you plan to edit the audio further).
+
+If you have intro or outro audio files set up in `audio/intro/` or `audio/outro/`, checkboxes will appear to skip them for this run.
+
+**4. Generate**
+
+Click **Generate narration**. A progress log appears showing each stage: preprocessing, synthesis (paragraph by paragraph), mixing, and encoding. Synthesis is the slow part — a 2,000-word post takes roughly 3–5 minutes on CPU.
+
+**5. Download the result**
+
+Once complete, an audio player appears so you can listen in the browser. Use the **Download** button below it to save the file to your computer. The file is also saved to `audio/output/` in the project folder.
 
 ---
 

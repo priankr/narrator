@@ -58,7 +58,6 @@ const VOICES = [
   { id: 'bm_george',   name: 'George',   accent: 'British English',  gender: 'male'   },
 ];
 
-const SAMPLE_TEXT = 'The quick brown fox jumps over the lazy dog. She sells sea shells by the sea shore.';
 
 // Filter definitions (label → match function)
 const FILTERS = [
@@ -168,8 +167,14 @@ function initVoiceGallery() {
   const grid = document.getElementById('voice-grid');
   if (!grid || !filterRow) return;
 
-  const sampleTextEl = document.getElementById('sample-text-body');
-  if (sampleTextEl) sampleTextEl.textContent = SAMPLE_TEXT;
+  // Fetch and render posts/sample.md into the preview panel
+  const previewContent = document.getElementById('sample-post-content');
+  if (previewContent) {
+    fetch(`${RAW_BASE}/posts/sample.md`)
+      .then(res => res.ok ? res.text() : Promise.reject(res.status))
+      .then(md => { previewContent.innerHTML = marked.parse(md); })
+      .catch(() => { previewContent.textContent = 'Could not load sample post.'; });
+  }
 
   // Render voice cards
   VOICES.forEach(voice => {
@@ -184,7 +189,6 @@ function initVoiceGallery() {
         <span class="voice-tag-chip">${voice.id}</span>
         <span class="voice-accent">${voice.accent}</span>
       </div>
-      <p class="card-caption">${SAMPLE_TEXT}</p>
       <audio controls preload="none">
         <source src="${sampleUrl}" type="audio/mpeg" />
         Your browser does not support the audio element.
