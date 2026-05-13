@@ -9,8 +9,8 @@
  */
 
 // ── Configuration ─────────────────────────────────────────────────────────
-const REPO_OWNER = 'YOUR_GITHUB_USERNAME';   // e.g. 'jsmith'
-const REPO_NAME  = 'YOUR_REPO_NAME';         // e.g. 'narrator-app'
+const REPO_OWNER = 'priankr';
+const REPO_NAME  = 'narrator';
 const REPO_BRANCH = 'main';
 
 const RAW_BASE = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}`;
