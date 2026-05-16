@@ -73,6 +73,7 @@ All commands print a single JSON line to stdout. Parse that for results. Ignore 
 | `--output <path>` | Write output to an exact path (format inferred from extension) |
 | `--progress` | Emit JSON progress events to stdout during synthesis |
 | `--force` | Discard cached segments and regenerate from scratch |
+| `--cache-segments` | Write segment files and manifest to disk; enables resume-on-failure (off by default) |
 
 ---
 

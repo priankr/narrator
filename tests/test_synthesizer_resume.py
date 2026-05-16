@@ -102,6 +102,7 @@ def test_rerun_with_complete_manifest_skips_all(tmp_path):
         speed=1.0,
         pause_ms=0,
         raw_dir=tmp_path,
+        cache_segments=True,
     )
     first_count = provider.call_count
 
@@ -114,6 +115,7 @@ def test_rerun_with_complete_manifest_skips_all(tmp_path):
         speed=1.0,
         pause_ms=0,
         raw_dir=tmp_path,
+        cache_segments=True,
     )
 
     assert provider.call_count == first_count  # no new calls
@@ -141,6 +143,7 @@ def test_rerun_after_partial_failure_synthesizes_only_missing(tmp_path):
         speed=1.0,
         pause_ms=0,
         raw_dir=tmp_path,
+        cache_segments=True,
     )
 
     assert provider.call_count == 1  # only segment 3
@@ -159,6 +162,7 @@ def test_force_clears_cache_and_re_synthesizes_all(tmp_path):
         speed=1.0,
         pause_ms=0,
         raw_dir=tmp_path,
+        cache_segments=True,
     )
     first_count = provider.call_count
 
@@ -172,6 +176,7 @@ def test_force_clears_cache_and_re_synthesizes_all(tmp_path):
         pause_ms=0,
         raw_dir=tmp_path,
         force=True,
+        cache_segments=True,
     )
 
     assert provider.call_count == first_count * 2
@@ -190,6 +195,7 @@ def test_voice_change_clears_cache(tmp_path):
         speed=1.0,
         pause_ms=0,
         raw_dir=tmp_path,
+        cache_segments=True,
     )
 
     provider_b = MockTTSProvider(wav)
@@ -201,6 +207,7 @@ def test_voice_change_clears_cache(tmp_path):
         speed=1.0,
         pause_ms=0,
         raw_dir=tmp_path,
+        cache_segments=True,
     )
 
     assert provider_b.call_count == 2  # full re-synthesis
@@ -247,3 +254,98 @@ def test_emit_progress_prints_events(tmp_path, capsys):
     assert segment_events[0]["segment"] == 1
     assert segment_events[0]["total"] == 2
     assert segment_events[1]["segment"] == 2
+
+
+# ---------------------------------------------------------------------------
+# cache_segments=False (default) — in-memory assembly
+# ---------------------------------------------------------------------------
+
+def test_default_run_writes_no_segment_files(tmp_path):
+    provider = MockTTSProvider(make_silent_wav())
+    paragraphs = ["First.", "Second.", "Third."]
+
+    synthesize(
+        paragraphs=paragraphs,
+        post_name="test-post",
+        provider=provider,
+        voice="af_sarah",
+        speed=1.0,
+        pause_ms=0,
+        raw_dir=tmp_path,
+    )
+
+    work_dir = tmp_path / "test-post"
+    assert not list(work_dir.glob("segment-*.wav"))
+
+
+def test_default_run_writes_no_manifest(tmp_path):
+    provider = MockTTSProvider(make_silent_wav())
+    paragraphs = ["First.", "Second."]
+
+    synthesize(
+        paragraphs=paragraphs,
+        post_name="test-post",
+        provider=provider,
+        voice="af_sarah",
+        speed=1.0,
+        pause_ms=0,
+        raw_dir=tmp_path,
+    )
+
+    assert not (tmp_path / "test-post" / "manifest.json").exists()
+
+
+def test_default_run_body_wav_exists(tmp_path):
+    provider = MockTTSProvider(make_silent_wav())
+    paragraphs = ["Hello.", "World."]
+
+    body_path = synthesize(
+        paragraphs=paragraphs,
+        post_name="my-post",
+        provider=provider,
+        voice="af_sarah",
+        speed=1.0,
+        pause_ms=0,
+        raw_dir=tmp_path,
+    )
+
+    assert body_path.exists()
+    assert body_path.suffix == ".wav"
+
+
+def test_default_run_body_wav_has_audio(tmp_path):
+    provider = MockTTSProvider(make_silent_wav())
+    paragraphs = ["Hello.", "World."]
+
+    body_path = synthesize(
+        paragraphs=paragraphs,
+        post_name="my-post",
+        provider=provider,
+        voice="af_sarah",
+        speed=1.0,
+        pause_ms=0,
+        raw_dir=tmp_path,
+    )
+
+    assert body_path.stat().st_size > 0
+
+
+def test_cache_segments_writes_segment_files(tmp_path):
+    provider = MockTTSProvider(make_silent_wav())
+    paragraphs = ["First.", "Second.", "Third."]
+
+    synthesize(
+        paragraphs=paragraphs,
+        post_name="test-post",
+        provider=provider,
+        voice="af_sarah",
+        speed=1.0,
+        pause_ms=0,
+        raw_dir=tmp_path,
+        cache_segments=True,
+    )
+
+    work_dir = tmp_path / "test-post"
+    segment_files = list(work_dir.glob("segment-*.wav"))
+    assert len(segment_files) == 3
+    assert (work_dir / "manifest.json").exists()

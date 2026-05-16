@@ -123,7 +123,9 @@ def cli():
 @click.option("--output", "output_override", default=None, type=click.Path(), help="Exact output file path (overrides derived path)")
 @click.option("--dry-run", is_flag=True, default=False, help="Validate inputs and print the resolved plan without running the pipeline")
 @click.option("--progress", is_flag=True, default=False, help="Emit JSON progress events to stdout during synthesis")
-def generate(post_path, voice, fmt, speed, no_intro, no_outro, raw_only, force, post_name, output_override, dry_run, progress):
+@click.option("--cache-segments", "cache_segments", is_flag=True, default=False,
+              help="Write segment files and manifest to disk; enables resume-on-failure")
+def generate(post_path, voice, fmt, speed, no_intro, no_outro, raw_only, force, post_name, output_override, dry_run, progress, cache_segments):
     """Generate a narration for POST_PATH (a Markdown file)."""
     try:
         config = _load_config()
@@ -192,6 +194,7 @@ def generate(post_path, voice, fmt, speed, no_intro, no_outro, raw_only, force, 
                 "skip_intro": no_intro,
                 "skip_outro": no_outro,
                 "force": force,
+                "cache_segments": cache_segments,
             })
             return
 
@@ -203,6 +206,15 @@ def generate(post_path, voice, fmt, speed, no_intro, no_outro, raw_only, force, 
                 "hint": "pass --force to regenerate",
             })
             return
+
+        if output_path.exists() and (force or raw_only):
+            print(
+                f"  [WARN] Output already exists: {output_path}. "
+                "Regenerating because --force/--raw-only was passed.",
+                file=sys.stderr,
+            )
+            if progress:
+                _event({"event": "warn", "message": f"Output already exists: {output_path}. Regenerating."})
 
         # Preprocess
         print(f"Preprocessing {post_path.name}...", file=sys.stderr)
@@ -228,6 +240,7 @@ def generate(post_path, voice, fmt, speed, no_intro, no_outro, raw_only, force, 
             raw_dir=raw_dir,
             force=force,
             emit_progress=progress,
+            cache_segments=cache_segments,
         )
 
         if progress:

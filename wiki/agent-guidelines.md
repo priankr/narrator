@@ -98,6 +98,7 @@ python narrator.py generate <post-path> [options]
 | `--output` | path | derived from slug + format | Exact output file path; format inferred from extension if provided |
 | `--dry-run` | flag | off | Validate all inputs and print the resolved plan without running the pipeline |
 | `--progress` | flag | off | Emit JSON progress events to stdout during synthesis (see section 1.3) |
+| `--cache-segments` | flag | off | Write segment files and `manifest.json` to disk; enables resume-on-failure |
 
 **Parameter validation rules:**
 - Speed outside `[0.5, 2.0]` → error before synthesis begins
@@ -261,11 +262,14 @@ When `--progress` is passed, JSON event lines are emitted to stdout before the t
 
 ```json
 {"event": "preprocess_done", "paragraphs": 24}
+{"event": "warn", "message": "Output already exists: audio/output/my-essay.mp3. Regenerating."}
 {"event": "segment_done", "segment": 3, "total": 24, "voice": "af_sarah", "speed": 1.0}
 {"event": "synthesis_done", "body_path": "audio\\raw\\my-essay\\my-essay-body.wav"}
 {"event": "mix_done", "mixed_path": "audio\\raw\\my-essay\\my-essay-mixed.wav"}
 {"event": "encode_done", "output_path": "audio\\output\\my-essay.mp3"}
 ```
+
+The `warn` event is emitted when the output file already exists but the run will proceed anyway (via `--force` or `--raw-only`). It appears after `preprocess_done` and before the first `segment_done`.
 
 The final `{"status": "ok", ...}` line follows immediately after `encode_done`.
 
@@ -285,7 +289,8 @@ The final `{"status": "ok", ...}` line follows immediately after `encode_done`.
   "would_skip": false,
   "skip_intro": false,
   "skip_outro": false,
-  "force": false
+  "force": false,
+  "cache_segments": false
 }
 ```
 
@@ -442,11 +447,12 @@ Read the full source file before editing any stage. Changing a function signatur
 - **Side effects:** none (pure function)
 
 #### `pipeline/synthesizer.py`
-- **Entry:** `synthesize(paragraphs, post_name, provider, voice, speed, pause_ms, raw_dir, force) -> Path`
+- **Entry:** `synthesize(paragraphs, post_name, provider, voice, speed, pause_ms, raw_dir, force, emit_progress, cache_segments) -> Path`
 - **Input:** paragraph list + config values + provider instance
 - **Output:** `Path` to assembled body WAV (`audio/raw/{post-name}/{post-name}-body.wav`)
-- **Side effects:** writes segment WAV files and `manifest.json` to `audio/raw/{post-name}/`
-- **Resume logic:** reads manifest on startup; skips completed segments; resets if voice or speed changed
+- **Side effects (default):** no segment files or manifest written; audio assembled in memory
+- **Side effects (with `cache_segments=True`):** writes `segment-*.wav` and `manifest.json` to `audio/raw/{post-name}/`
+- **Resume logic:** only active when `cache_segments=True`; reads manifest on startup; skips completed segments; resets if voice or speed changed
 
 #### `pipeline/mixer.py`
 - **Entry:** `mix(body_path, post_name, intro_dir, outro_dir, normalize, fade_duration_ms, skip_intro, skip_outro, force) -> Path`

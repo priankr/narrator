@@ -8,6 +8,7 @@ For the current agent instruction files produced by this effort, see:
 - [`CLAUDE.md`](../../CLAUDE.md) — Claude Code conventions
 - [`AGENTS.md`](../../AGENTS.md) — generic agent quick-start
 - [`wiki/agent-guidelines.md`](../agent-guidelines.md) — full shared reference
+- [`.gemini/settings.json`](../../.gemini/settings.json) — points Gemini CLI at `AGENTS.md` (no separate GEMINI.md needed)
 
 ---
 
@@ -416,6 +417,18 @@ These are all new optional flags — fully backwards-compatible. Implement toget
 - [x] Test 5: `tests/test_pipeline_smoke.py`
 
 Start with Tests 1 and 2 (pure unit tests, no I/O) to build confidence in the core logic. Then Test 4 (mocked I/O). Then Test 3 (CLI). Test 5 last (requires model files).
+
+---
+
+### Phase F — Usability Improvements (branch: `usability-improvements-1`)
+- [x] Feature: `--cache-segments` flag on `generate` (caching off by default; opt-in writes segments and manifest)
+- [x] Feature: Duplication warning on generate when output exists and `--force`/`--raw-only` is passed (stderr + `warn` JSON event)
+- [x] Fix: Gradio getting-started link → GitHub URL
+- [x] Agent files: `.gemini/settings.json` (points Gemini CLI at `AGENTS.md`)
+- [x] Agent files: `AGENTS.md` updated with `--cache-segments` flag
+- [x] Agent files: `.claude/commands/generate.md` updated to mention `--cache-segments`
+- [x] Docs: `wiki/agent-guidelines.md` section 1.3 updated (options table, dry-run schema, `warn` event)
+- [x] Tests: 5 new cases in `tests/test_synthesizer_resume.py` for in-memory vs. disk-cache paths
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Narrator App is a local CLI tool with a linear four-stage pipeline. Each stage has a single responsibility, writes its output to disk, and can be resumed independently if a run is interrupted.
+Narrator App is a local CLI tool with a linear four-stage pipeline. Each stage has a single responsibility and passes its output to the next stage via a file on disk.
 
 ```
 posts/my-essay.md
@@ -14,7 +14,7 @@ posts/my-essay.md
         │  list[str]
         ▼
 ┌───────────────┐
-│  Synthesizer  │  Paragraphs → per-segment WAV files + assembled body WAV
+│  Synthesizer  │  Paragraphs → assembled body WAV
 └───────┬───────┘
         │  body.wav
         ▼
@@ -82,11 +82,11 @@ Paragraphs are split on double newlines. Internal single newlines within a parag
 
 ### `pipeline/synthesizer.py` — TTS Synthesis
 
-Synthesizes each paragraph independently via the `TTSProvider` interface, writing each result to disk immediately. Assembles all segments into a single body WAV with configurable silence between paragraphs.
+Synthesizes each paragraph independently via the `TTSProvider` interface and assembles all results into a single body WAV with configurable silence between paragraphs.
 
 Key behaviours:
-- **Segment caching:** Each paragraph → `segment-NNN.wav`. If a run fails mid-way, a re-run skips already-completed segments.
-- **Manifest tracking:** `manifest.json` records which segments are complete and the voice/speed used. A mismatch in voice or speed automatically resets the cache.
+- **In-memory assembly (default):** Synthesized bytes are held in memory and assembled directly into `{post-name}-body.wav`. No `segment-*.wav` files or `manifest.json` are written.
+- **Disk caching (opt-in, `--cache-segments`):** Each paragraph is written to `segment-NNN.wav` immediately after synthesis. `manifest.json` records completed indices and the voice/speed used. A mismatch in voice or speed resets the cache. A re-run skips already-completed segments, enabling resume-on-failure.
 - **Silence insertion:** `pydub.AudioSegment.silent(duration=pause_ms)` is concatenated between paragraph segments (configurable via `audio.paragraph_pause_ms` in `config.yaml`).
 
 ### `pipeline/mixer.py` — Intro/Outro Mixing
@@ -147,18 +147,18 @@ Voice IDs follow a prefix convention: first character = language/accent (`a` = A
 
 Long-form posts (2,000–3,000+ words) can take 3–6 minutes to synthesize on CPU. Two layers of checkpointing protect against mid-run failures:
 
-**Paragraph-level (synthesizer):**
-Each paragraph segment is written to `audio/raw/{post-name}/segment-NNN.wav` immediately after synthesis. `manifest.json` records completed segment indices. On re-run, completed segments are skipped.
+**Paragraph-level (synthesizer, opt-in with `--cache-segments`):**
+Pass `--cache-segments` to write each paragraph to `audio/raw/{post-name}/segment-NNN.wav` immediately after synthesis. `manifest.json` records completed segment indices and the voice/speed used. On re-run, completed segments are skipped — a failure at paragraph 15 of 25 resumes from paragraph 15. Without `--cache-segments` (the default), synthesis runs entirely in memory and resume is not available.
 
 **Stage-level (mixer and encoder):**
 If `{post-name}-mixed.wav` or the final output file already exists, the corresponding stage is skipped. Pass `--force` to bypass all checkpoints and regenerate from scratch.
 
 ```
 audio/raw/{post-name}/
-├── segment-001.wav          ← paragraph 1 audio
-├── segment-002.wav
+├── segment-001.wav          ← paragraph 1 audio  (only with --cache-segments)
+├── segment-002.wav          ←                     (only with --cache-segments)
 ├── ...
-├── manifest.json            ← resume tracker
+├── manifest.json            ← resume tracker      (only with --cache-segments)
 ├── {post-name}-body.wav     ← assembled body (post-synthesis checkpoint)
 └── {post-name}-mixed.wav    ← body + intro/outro (post-mix checkpoint)
 ```

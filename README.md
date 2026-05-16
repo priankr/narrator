@@ -25,6 +25,22 @@ Narration is generated locally using [Kokoro-82M](https://github.com/hexgrad/kok
 
 ---
 
+## Three Ways To Use The App
+
+**1. Terminal (CLI)**
+The primary interface. One command, structured JSON output, scriptable and agent-friendly.
+```bash
+python narrator.py generate posts/your-post.md
+```
+
+**2. Browser UI**
+Run `python narrator_ui.py` to open a local Gradio interface — voice preview, speed and pause sliders, format picker, and one-click download. No terminal required after setup.
+
+**3. AI Agent**
+The CLI is designed for agent invocation: all output is JSON on stdout, progress goes to stderr, exit codes are `0` or `1`. See the [Agent Use](#agent-use) section below.
+
+---
+
 ## Quick Start
 
 ```bash
@@ -36,8 +52,6 @@ python narrator.py generate posts/your-post.md
 
 See [wiki/getting-started.md](wiki/getting-started.md) for a full walkthrough including ffmpeg installation.
 
-**Prefer a UI?** Run `python narrator_ui.py` to open a local browser interface with voice preview, sliders, and a one-click download — no terminal required.
-
 ---
 
 ## Features
@@ -47,6 +61,7 @@ See [wiki/getting-started.md](wiki/getting-started.md) for a full walkthrough in
 - **Loudness normalization** — RMS-matches intro and outro to the body audio so volume is consistent across all three segments
 - **Intro/outro fades** — fades out the end of the intro and fades in the start of the outro for smooth transitions
 - **Volume control** — apply a dB gain adjustment to the final output
+- **Resume-on-failure** — pass `--cache-segments` to write each paragraph to disk as it completes; a re-run skips already-finished paragraphs
 - **Multilingual narration** — optional [Kokoro v1.0 model](wiki/configuration.md#multilingual-model) adds support for Spanish, French, Hindi, Italian, Japanese, Brazilian Portuguese, and Mandarin Chinese
 
 All settings are controlled in `config.yaml`. See [wiki/configuration.md](wiki/configuration.md) for the full reference.
@@ -69,6 +84,8 @@ Sample narrations across all four accent and gender combinations:
 | `bf_isabella` | British | Female | [sample-audio-isabella.mp3](samples/sample-audio-isabella.mp3) |
 | `bm_george` | British | Male | [sample-audio-george.mp3](samples/sample-audio-george.mp3) |
 | `bm_lewis` | British | Male | [sample-audio-lewis.mp3](samples/sample-audio-lewis.mp3) |
+
+Checkout all samples at https://priankr.github.io/narrator/.
 
 ---
 

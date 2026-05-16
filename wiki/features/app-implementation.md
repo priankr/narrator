@@ -16,9 +16,9 @@ narrator-app/
 │   ├── outro/                    # Optional outro audio clips
 │   ├── raw/
 │   │   └── {post-name}/          # Working directory per post
-│   │       ├── segment-001.wav   # Individual paragraph audio
+│   │       ├── segment-001.wav   # Individual paragraph audio (only with --cache-segments)
 │   │       ├── segment-NNN.wav
-│   │       ├── manifest.json     # Synthesis progress tracker
+│   │       ├── manifest.json     # Synthesis progress tracker (only with --cache-segments)
 │   │       └── {post-name}-body.wav  # Assembled body, pre-mix
 │   └── output/                   # Final output audio files
 ├── models/                       # Kokoro model files (downloaded by setup)
@@ -37,8 +37,28 @@ narrator-app/
 ├── config.yaml                   # User-facing configuration
 ├── requirements.txt
 ├── LICENSE                       # MIT
+├── CLAUDE.md                     # Claude Code instructions (added Phase 3)
+├── AGENTS.md                     # Generic agent quick-start (added Phase 3)
+├── .claude/
+│   ├── commands/                 # Claude Code slash commands (added Phase 3)
+│   │   ├── check.md
+│   │   ├── status.md
+│   │   ├── voices.md
+│   │   ├── generate.md
+│   │   └── dry-run.md
+│   └── settings.json             # Pre-approved CLI commands
+├── .gemini/
+│   └── settings.json             # Points Gemini CLI at AGENTS.md (added Phase F)
+├── tests/                        # Test suite (added Phase E)
+│   ├── conftest.py
+│   ├── test_preprocessor.py
+│   ├── test_validate.py
+│   ├── test_synthesizer_resume.py
+│   ├── test_cli_output.py
+│   └── test_pipeline_smoke.py
 ├── docs/                         # GitHub Pages site (HTML/CSS/JS)
 └── wiki/
+    ├── agent-guidelines.md       # Consumer + developer reference (added Phase 3)
     ├── architechture.md
     ├── configuration.md
     ├── getting-started.md
@@ -105,13 +125,27 @@ Output: "Read this carefully or visit for more."
 
 ### Stage 2 — Synthesis (`pipeline/synthesizer.py`)
 
-Converts the paragraph list into a single assembled body WAV, with each paragraph written to disk as it completes so that a failure mid-way does not require restarting from scratch.
+Converts the paragraph list into a single assembled body WAV.
 
 **Long-form note:** Substack posts typically run 2,000–3,000+ words. On CPU (no GPU), Kokoro processes roughly 500–800 words/minute, so a 3,000-word post takes approximately 3–6 minutes. The paragraph-by-paragraph architecture naturally keeps each synthesis call within Kokoro's internal character limit without any additional chunking logic.
 
-**Segment caching and resume logic:**
+**Default behaviour (in-memory):**
 
-Each paragraph is saved as a numbered WAV file immediately after synthesis. A `manifest.json` tracks which segments are complete. On re-run, already-completed segments are skipped — a failure at paragraph 15 of 25 resumes from paragraph 15.
+Synthesized bytes are held in memory and assembled directly into `{post-name}-body.wav`. No `segment-*.wav` files or `manifest.json` are written. Faster and cleaner for one-shot runs.
+
+**Steps:**
+
+1. Load the configured `TTSProvider` (see TTS Provider section below)
+2. Create working directory `audio/raw/{post-name}/` if it does not exist
+3. For each paragraph (with progress printed to stderr, e.g. `[3/24] Synthesizing paragraph 3...`):
+   - Call `provider.synthesize(text, voice, speed)` → returns raw WAV bytes
+   - Accumulate bytes in memory
+4. Insert a silence segment of `paragraph_pause_ms` milliseconds between each paragraph
+5. Assemble in memory → save to `audio/raw/{post-name}/{post-name}-body.wav`
+
+**Opt-in: segment caching and resume (`--cache-segments`):**
+
+Pass `--cache-segments` to write each paragraph to disk as it completes. A `manifest.json` tracks which segments are done. On re-run, already-completed segments are skipped — a failure at paragraph 15 of 25 resumes from paragraph 15.
 
 `manifest.json` structure:
 ```json
@@ -124,18 +158,7 @@ Each paragraph is saved as a numbered WAV file immediately after synthesis. A `m
 }
 ```
 
-**Steps:**
-
-1. Load the configured `TTSProvider` (see TTS Provider section below)
-2. Create working directory `audio/raw/{post-name}/` if it does not exist
-3. Load `manifest.json` if it exists; otherwise create it
-4. For each paragraph (with progress printed to stderr, e.g. `[3/24] Synthesizing paragraph 3...`):
-   - Skip if segment file already exists in the manifest
-   - Call `provider.synthesize(text, voice, speed)` → returns raw WAV bytes
-   - Write to `audio/raw/{post-name}/segment-{NNN}.wav`
-   - Update `manifest.json` with the completed segment index
-5. Insert a silence segment of `paragraph_pause_ms` milliseconds between each paragraph segment
-6. Concatenate all segments in order → save to `audio/raw/{post-name}/{post-name}-body.wav`
+Steps (with `--cache-segments`): same as above, but each paragraph is written to `audio/raw/{post-name}/segment-{NNN}.wav` and `manifest.json` is updated after each one. Completed segments are skipped on re-run.
 
 **Output:** `audio/raw/{post-name}/{post-name}-body.wav`
 
@@ -257,8 +280,13 @@ python narrator.py check
 | `--speed` | `1.0` | Speech speed multiplier |
 | `--no-intro` | off | Skip intro even if file exists |
 | `--no-outro` | off | Skip outro even if file exists |
-| `--raw-only` | off | Stop after synthesis, skip mixing and encoding |
+| `--raw-only` | off | Stop after synthesis; skip mixing and encoding |
 | `--force` | off | Ignore existing segments and output; regenerate from scratch |
+| `--post-name` | derived | Override slug derived from filename |
+| `--output` | derived | Exact output file path |
+| `--dry-run` | off | Validate inputs and print plan without running |
+| `--progress` | off | Emit JSON progress events to stdout |
+| `--cache-segments` | off | Write segment files and manifest to disk; enables resume-on-failure |
 
 ### Structured Output
 

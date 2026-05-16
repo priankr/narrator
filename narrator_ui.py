@@ -169,6 +169,10 @@ def _run_generate(
                 lines.append("[encode]       complete")
                 yield _log_html(lines), None, None
 
+            elif etype == "warn":
+                lines.append(f"[warn]         {ev['message']}")
+                yield _log_html(lines), None, None
+
             elif status == "ok" and not ev.get("dry_run"):
                 out = ev.get("output_path")
                 dur = ev.get("duration_sec", 0)
@@ -441,7 +445,7 @@ def build_ui() -> gr.Blocks:
             <div id="app-header">
                 <h1>Narrator App</h1>
                 <p>Convert a Markdown post into narrated audio.
-                   New here? Read the <a href="wiki/getting-started.md" target="_blank"
+                   New here? Read the <a href="https://github.com/priankr/narrator/blob/main/wiki/getting-started.md" target="_blank"
                    style="color:#17171c;text-decoration:underline;">getting started guide</a>.</p>
             </div>
         """)

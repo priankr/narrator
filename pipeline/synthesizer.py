@@ -1,3 +1,4 @@
+import io
 import json
 import sys
 from pathlib import Path
@@ -17,48 +18,80 @@ def synthesize(
     raw_dir: Path,
     force: bool = False,
     emit_progress: bool = False,
+    cache_segments: bool = False,
 ) -> Path:
     """
-    Synthesize each paragraph to WAV, cache segments to disk, then assemble
-    the full body WAV with silence between paragraphs.
+    Synthesize each paragraph to WAV then assemble the full body WAV.
+
+    When cache_segments=False (default): holds audio in memory; no segment
+    files or manifest.json are written. Faster and cleaner for one-shot runs.
+
+    When cache_segments=True: writes segment-*.wav and manifest.json to disk
+    after each paragraph, enabling resume-on-failure via the status command.
 
     Returns the path to the assembled body WAV.
     """
     work_dir = Path(raw_dir) / post_name
     work_dir.mkdir(parents=True, exist_ok=True)
 
-    manifest_path = work_dir / "manifest.json"
     body_path = work_dir / f"{post_name}-body.wav"
-
-    if force:
-        _clear_work_dir(work_dir, manifest_path, body_path)
-
-    manifest = _load_or_create_manifest(manifest_path, post_name, voice, speed, paragraphs)
-    completed = set(manifest["completed"])
     total = len(paragraphs)
 
-    for i, para in enumerate(paragraphs, start=1):
-        if i in completed:
-            print(f"[{i}/{total}] Paragraph {i} already synthesized, skipping.", file=sys.stderr)
-            continue
-        if not para.strip():
-            continue
-        print(f"[{i}/{total}] Synthesizing paragraph {i}...", file=sys.stderr)
-        wav_bytes = provider.synthesize(para, voice, speed)
-        segment_path = work_dir / f"segment-{i:03d}.wav"
-        segment_path.write_bytes(wav_bytes)
-        manifest["completed"].append(i)
-        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-        if emit_progress:
-            print(json.dumps({"event": "segment_done", "segment": i, "total": total, "voice": voice, "speed": speed}), flush=True)
+    if cache_segments:
+        manifest_path = work_dir / "manifest.json"
+        if force:
+            _clear_work_dir(work_dir, manifest_path, body_path)
+        manifest = _load_or_create_manifest(manifest_path, post_name, voice, speed, paragraphs)
+        completed = set(manifest["completed"])
 
-    print("Assembling body audio...", file=sys.stderr)
-    body_path = _assemble(work_dir, total, pause_ms, body_path)
+        for i, para in enumerate(paragraphs, start=1):
+            if i in completed:
+                print(f"[{i}/{total}] Paragraph {i} already synthesized, skipping.", file=sys.stderr)
+                continue
+            if not para.strip():
+                continue
+            print(f"[{i}/{total}] Synthesizing paragraph {i}...", file=sys.stderr)
+            wav_bytes = provider.synthesize(para, voice, speed)
+            segment_path = work_dir / f"segment-{i:03d}.wav"
+            segment_path.write_bytes(wav_bytes)
+            manifest["completed"].append(i)
+            manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+            if emit_progress:
+                print(json.dumps({"event": "segment_done", "segment": i, "total": total, "voice": voice, "speed": speed}), flush=True)
+
+        print("Assembling body audio...", file=sys.stderr)
+        body_path = _assemble_from_disk(work_dir, total, pause_ms, body_path)
+    else:
+        segments: list[bytes] = []
+        for i, para in enumerate(paragraphs, start=1):
+            if not para.strip():
+                continue
+            print(f"[{i}/{total}] Synthesizing paragraph {i}...", file=sys.stderr)
+            wav_bytes = provider.synthesize(para, voice, speed)
+            segments.append(wav_bytes)
+            if emit_progress:
+                print(json.dumps({"event": "segment_done", "segment": i, "total": total, "voice": voice, "speed": speed}), flush=True)
+
+        print("Assembling body audio...", file=sys.stderr)
+        body_path = _assemble_from_memory(segments, pause_ms, body_path)
+
     print(f"Body assembled: {body_path}", file=sys.stderr)
     return body_path
 
 
-def _assemble(work_dir: Path, total: int, pause_ms: int, body_path: Path) -> Path:
+def _assemble_from_memory(segments: list[bytes], pause_ms: int, body_path: Path) -> Path:
+    if not segments:
+        raise RuntimeError("No audio segments to assemble.")
+    silence = AudioSegment.silent(duration=pause_ms)
+    combined = None
+    for wav_bytes in segments:
+        seg = AudioSegment.from_wav(io.BytesIO(wav_bytes))
+        combined = seg if combined is None else combined + silence + seg
+    combined.export(str(body_path), format="wav")
+    return body_path
+
+
+def _assemble_from_disk(work_dir: Path, total: int, pause_ms: int, body_path: Path) -> Path:
     silence = AudioSegment.silent(duration=pause_ms)
     combined = None
     for i in range(1, total + 1):
