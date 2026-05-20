@@ -258,6 +258,19 @@ img { display: block; max-width: 100%; }
   margin-bottom: 2.5rem;
 }
 
+.section-note {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.section-note a {
+  color: var(--color-action-blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 
 /* ── Docs section ─────────────────────────────────────────────── */
 .docs-section {

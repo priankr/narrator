@@ -123,7 +123,9 @@ To see all available voices:
 python narrator.py voices
 ```
 
-See [voices.md](voices.md) for the full voice list with accent and gender reference.
+See [voices.md](voices.md) for the full voice list with accent and gender reference. Audio samples are only available for the 10 v0.19 English voices — for others, preview them at [Kokoro-TTS on Hugging Face](https://huggingface.co/spaces/hexgrad/Kokoro-TTS).
+
+> **Tip:** Before narrating a full post, test your chosen voice and speed settings with a short passage of a few sentences. Synthesis can take several minutes for longer content.
 
 ---
 
@@ -143,7 +145,7 @@ audio/intro/my-essay-intro.mp3
 audio/outro/my-essay-outro.mp3
 ```
 
-Post-specific files take priority over default files. Narrator automatically normalizes the loudness of all three segments before combining them.
+The post name in the filename is the Markdown filename stem without `.md` — so `posts/my-essay.md` → `my-essay`. Post-specific files take priority over default files. Narrator automatically normalizes the loudness of all three segments before combining them.
 
 ---
 

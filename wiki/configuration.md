@@ -89,7 +89,7 @@ paths:
 
 ## Choosing a Voice
 
-See [voices.md](voices.md) for the complete voice reference, including accent and gender breakdowns.
+See [voices.md](voices.md) for the complete voice reference, including accent and gender breakdowns. Samples are only available for the 10 v0.19 English voices — for others, use the [Kokoro-TTS playground on Hugging Face](https://huggingface.co/spaces/hexgrad/Kokoro-TTS) to preview them. Before narrating a long post, test your voice and speed settings on a short passage first — synthesis can take several minutes for longer content.
 
 **Quick change in `config.yaml`:**
 ```yaml
@@ -116,10 +116,13 @@ Place audio files in `audio/intro/` and `audio/outro/`. Narrator supports MP3, W
 **Matching logic — Narrator looks in this order:**
 
 1. Post-specific file: `audio/intro/{post-name}-intro.*`
+   - `{post-name}` is the filename stem without `.md` — e.g. `my-essay` for `posts/my-essay.md`
    - e.g. `audio/intro/my-essay-intro.mp3` for `posts/my-essay.md`
 2. Shared fallback: `audio/intro/default-intro.*`
    - Used for every post that doesn't have a specific file
 3. If neither exists, intro is skipped (no error)
+
+> **Note:** Files in `audio/intro/` or `audio/outro/` that don't match either pattern are silently ignored. If your intro or outro isn't playing, check that the filename matches exactly — Narrator will print a warning to the terminal if it finds unrecognized files in those folders.
 
 The same logic applies to outro files.
 

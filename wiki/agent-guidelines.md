@@ -386,7 +386,7 @@ narrator-app/
 2. `audio/intro/default-intro.*` — shared fallback used for all posts
 3. If neither exists, the intro/outro is skipped silently
 
-The same pattern applies for outro files. See [`wiki/configuration.md`](configuration.md) for setup examples.
+The same pattern applies for outro files. The post name is the filename stem without `.md` — so `posts/my-essay.md` → `my-essay`. Files that don't match either pattern are silently skipped; verify the filename before running `generate` rather than relying on the stderr warning. See [`wiki/configuration.md`](configuration.md) for setup examples.
 
 **Never delete or modify anything inside `audio/raw/`.** The manifest and segment files are the resume mechanism. Corrupting them forces a full re-synthesis.
 

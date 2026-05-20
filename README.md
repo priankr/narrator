@@ -87,6 +87,8 @@ Sample narrations across all four accent and gender combinations:
 
 Checkout all samples at https://priankr.github.io/narrator/.
 
+These samples cover the 10 v0.19 English voices. For voices without a sample, preview them at [Kokoro-TTS on Hugging Face](https://huggingface.co/spaces/hexgrad/Kokoro-TTS).
+
 ---
 
 ## Documentation

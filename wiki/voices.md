@@ -4,6 +4,8 @@ Narrator uses [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) as its def
 
 > **Tip:** Once the app is set up, run `python narrator.py voices` to get the full list of voices available in the model files on your machine.
 
+> **Tip:** Audio samples are only available for the 10 v0.19 English voices. For voices without a sample, preview them at [Kokoro-TTS on Hugging Face](https://huggingface.co/spaces/hexgrad/Kokoro-TTS) before committing to one. Because synthesis can take several minutes for long posts, test your chosen voice and speed settings with a short passage first — a few sentences is enough to get a feel for the result.
+
 ---
 
 ## Naming Convention
