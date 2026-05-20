@@ -95,4 +95,20 @@ def _find_audio(directory: Path, post_name: str, role: str) -> AudioSegment | No
             if candidate.exists():
                 print(f"Found {role}: {candidate}", file=sys.stderr)
                 return AudioSegment.from_file(str(candidate))
+
+    if directory.exists():
+        expected = {f"{post_name}-{role}", f"default-{role}"}
+        unrecognized = [
+            f for f in directory.iterdir()
+            if f.suffix.lower() in _SUPPORTED_EXTENSIONS and f.stem not in expected
+        ]
+        if unrecognized:
+            names = ", ".join(f.name for f in unrecognized)
+            print(
+                f"Warning: {role} files found in {directory}/ but none match the expected "
+                f"naming pattern — they will be ignored: {names}\n"
+                f"  Expected: '{post_name}-{role}.*' (post-specific) or 'default-{role}.*' (shared fallback).",
+                file=sys.stderr,
+            )
+
     return None
