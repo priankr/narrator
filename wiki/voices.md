@@ -42,7 +42,9 @@ af_sarah
 
 ## Available Voices
 
-Voices marked with a sample link have audio previews in the `samples/` folder. The **Relative Speaking Speed** column reflects observed pace at `speed: 1.0` relative to `af_sarah` (the default).
+Voices marked with a sample link have audio previews in the `samples/` folder. The **Relative Speaking Speed** column reflects observed pace at `speed: 1.0` relative to `af_sarah`.
+
+> **Model requirement:** Voices with a sample link are available in both the v0.19 and v1.0 models. Voices without a sample link were added in v1.0 and require the multilingual model — run `python narrator.py setup --multilingual` to install it.
 
 ### American English (Female)
 
@@ -96,7 +98,7 @@ Voices marked with a sample link have audio previews in the `samples/` folder. T
 
 ## Additional Languages
 
-Kokoro-82M v1.0 includes voices for 7 additional languages beyond English. These are not supported by the v0.19 ONNX model that Narrator currently uses, and Narrator is configured for English only — but they are listed here for reference.
+Kokoro-82M v1.0 includes voices for 7 additional languages beyond English. These require the v1.0 model (`setup --multilingual`) — they are not available in v0.19.
 
 | Language | Voice IDs |
 |----------|-----------|

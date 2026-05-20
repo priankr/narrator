@@ -236,7 +236,7 @@ class TTSProvider(ABC):
 ### Kokoro Provider (`tts/kokoro_provider.py`)
 
 - **Model:** Kokoro-82M v0.19 by default (pip-installable, ~82MB, no GPU required); v1.0 multilingual model available via `setup --multilingual`
-- **Voices:** 10 English voices in v0.19; 54 voices across 9 languages in v1.0. Default voice: `af_sarah`
+- **Voices:** 10 specific English voices in v0.19; 54 voices across 9 languages in v1.0 (including new English voices not in v0.19, e.g. `am_puck`). Default voice configured in `config.yaml`.
 - **Long-form handling:** Kokoro has an internal character limit per call. The synthesizer already splits on paragraphs, so each call receives a short text segment — this naturally stays within limits.
 - **Installation:** `pip install kokoro-onnx` (CPU-only runtime, no CUDA required)
 

@@ -255,13 +255,17 @@ Agents should treat any line starting with `{"event":` as a progress notificatio
   "status": "ok",
   "provider": "kokoro",
   "installed_model": "v0.19",
+  "models_on_disk": ["v0.19", "v1.0"],
   "voices": [
-    {"id": "af_sarah", "available": true, "requires_model": "v0.19"},
-    {"id": "af_bella", "available": true, "requires_model": "v0.19"},
+    {"id": "af_sarah", "available": true,  "requires_model": "v0.19"},
+    {"id": "af_bella", "available": true,  "requires_model": "v0.19"},
+    {"id": "am_puck",  "available": false, "requires_model": "v1.0"},
     {"id": "hf_alpha", "available": false, "requires_model": "v1.0"}
   ]
 }
 ```
+
+`models_on_disk` lists all model versions whose `.onnx` and voices files are both present, regardless of which is active in config. `requires_model` is determined per-voice via an explicit whitelist of the 10 v0.19 voices — not by prefix, since new English voices like `am_puck` are v1.0-only.
 
 **Backwards compatibility note:** This is a breaking change to the `voices` schema — the `voices` array changes from `list[str]` to `list[object]`. Implement alongside a version indicator in the root object so agents can detect the new format.
 

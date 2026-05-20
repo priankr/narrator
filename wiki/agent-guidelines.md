@@ -68,7 +68,7 @@ No arguments or options. Returns a JSON list of voice ID strings. Use these IDs 
 
 **Voice ID format:** `^[a-z]{2}_[a-z]+$` — first two characters encode language and gender (`af_` = American Female, `am_` = American Male, `bf_` = British Female, `bm_` = British Male, etc.). See [`wiki/voices.md`](voices.md) for the complete prefix table and full voice catalog.
 
-Only voices supported by the **installed model** are actually usable. The default v0.19 model has 10 English voices (`af_*`, `am_*`, `bf_*`, `bm_*`). The multilingual v1.0 model has 54 voices across 9 languages. Passing a voice ID from the wrong model will produce a runtime error during synthesis.
+Only voices supported by the **installed model** are actually usable. The default v0.19 model ships with 10 specific English voices — not all English-prefix voices; newer voices like `am_puck` were added in v1.0 and are not available in v0.19. The multilingual v1.0 model has 54 voices across 9 languages. Passing a voice ID from the wrong model will produce a runtime error during synthesis.
 
 ---
 
@@ -157,6 +157,7 @@ All structured output is printed as a single JSON line to **stdout**. Progress m
   "status": "ok",
   "ffmpeg": true,
   "installed_model": "v0.19",
+  "hint": "v1.0 model is present but not active — set model_path and voices_path in config.yaml",
   "config": {
     "tts": {"provider": "kokoro", "voice": "af_sarah", "speed": 1.0},
     "audio": {"paragraph_pause_ms": 1000, "output_format": "mp3", "normalize_loudness": true, "fade_duration_ms": 2000, "volume_db": 0},
@@ -165,7 +166,7 @@ All structured output is printed as a single JSON line to **stdout**. Progress m
 }
 ```
 
-`installed_model` is `"v0.19"`, `"v1.0"`, or `null` if no model files are found.
+`installed_model` is the **active** model version (`"v0.19"`, `"v1.0"`, or `null`). `hint` is present only when v1.0 files are on disk but config still points to v0.19 — surface it to the user.
 
 #### `check` — failure
 ```json
@@ -184,16 +185,17 @@ All structured output is printed as a single JSON line to **stdout**. Progress m
   "status": "ok",
   "provider": "kokoro",
   "installed_model": "v0.19",
+  "models_on_disk": ["v0.19", "v1.0"],
   "voices": [
     {"id": "af_sarah",  "available": true,  "requires_model": "v0.19"},
     {"id": "af_bella",  "available": true,  "requires_model": "v0.19"},
     {"id": "hf_alpha",  "available": false, "requires_model": "v1.0"},
-    {"id": "af_alloy",  "available": false, "requires_model": "v0.19"}
+    {"id": "af_alloy",  "available": false, "requires_model": "v1.0"}
   ]
 }
 ```
 
-`available: true` means the voice works with the currently installed model. `requires_model` is derived from the voice ID prefix (`af/am/bf/bm` → `v0.19`; all other language prefixes → `v1.0`). Always filter by `available: true` before selecting a voice to use.
+`installed_model` is the active model version per config. `models_on_disk` lists all versions whose model + voices files are present on disk. `available: true` means the voice works with the currently active model. `requires_model` is determined per-voice: the 10 original v0.19 English voices map to `"v0.19"`; everything else (including new English voices like `am_puck`) maps to `"v1.0"`. Always filter by `available: true` before selecting a voice to use.
 
 #### `config` — success
 ```json

@@ -80,21 +80,38 @@ def _event(data: dict) -> None:
     print(json.dumps(data), flush=True)
 
 
-_ENGLISH_PREFIXES = {"af", "am", "bf", "bm"}
+# Voices that shipped with the v0.19 English model. Everything else requires v1.0.
+_V019_VOICES = {
+    "af_bella", "af_nicole", "af_sarah", "af_sky",
+    "am_adam", "am_michael",
+    "bf_emma", "bf_isabella",
+    "bm_george", "bm_lewis",
+}
 
 
 def _voice_requires_model(voice_id: str) -> str:
-    return "v0.19" if voice_id[:2] in _ENGLISH_PREFIXES else "v1.0"
+    return "v0.19" if voice_id in _V019_VOICES else "v1.0"
 
 
-def _installed_model(config: dict) -> str | None:
-    """Return the model version the configured provider will actually load."""
+def _installed_model(config: dict) -> dict:
+    """Return active model version (per config) and all versions found on disk."""
     model_path = Path(config["tts"].get("model_path") or DEFAULT_MODEL_PATH)
-    if not model_path.exists():
-        return None
-    if model_path == MULTILINGUAL_MODEL_PATH or "v1.0" in model_path.name:
-        return "v1.0"
-    return "v0.19"
+    voices_path = Path(config["tts"].get("voices_path") or DEFAULT_VOICES_PATH)
+
+    on_disk = []
+    if DEFAULT_MODEL_PATH.exists() and DEFAULT_VOICES_PATH.exists():
+        on_disk.append("v0.19")
+    if MULTILINGUAL_MODEL_PATH.exists() and MULTILINGUAL_VOICES_PATH.exists():
+        on_disk.append("v1.0")
+
+    if not model_path.exists() or not voices_path.exists():
+        active = None
+    elif model_path == MULTILINGUAL_MODEL_PATH or "v1.0" in model_path.name:
+        active = "v1.0"
+    else:
+        active = "v0.19"
+
+    return {"active": active, "on_disk": on_disk}
 
 
 # ---------------------------------------------------------------------------
@@ -307,10 +324,17 @@ def voices():
     try:
         config = _load_config()
 
-        installed_model = _installed_model(config)
+        installed = _installed_model(config)
+
+        if "v1.0" in installed["on_disk"] and installed["active"] != "v1.0":
+            print(
+                "  [WARN] v1.0 model is present but not active — "
+                "set model_path and voices_path in config.yaml to use it.",
+                file=sys.stderr,
+            )
 
         provider = _load_provider(config)
-        actual_voices = set(provider.list_voices()) if installed_model is not None else set()
+        actual_voices = set(provider.list_voices()) if installed["active"] is not None else set()
 
         all_ids = sorted(set(KNOWN_VOICES) | actual_voices)
         annotated = [
@@ -325,7 +349,8 @@ def voices():
         _ok({
             "status": "ok",
             "provider": config["tts"]["provider"],
-            "installed_model": installed_model,
+            "installed_model": installed["active"],
+            "models_on_disk": installed["on_disk"],
             "voices": annotated,
         })
     except Exception as exc:
@@ -390,8 +415,19 @@ def check():
         sys.exit(1)
     else:
         print("  [OK] All checks passed.", file=sys.stderr)
-        installed_model = _installed_model(config) if config is not None else None
-        result = {"status": "ok", "ffmpeg": True, "installed_model": installed_model}
+        installed = _installed_model(config) if config is not None else None
+        active = installed["active"] if installed else None
+        result = {"status": "ok", "ffmpeg": True, "installed_model": active}
+        if installed and "v1.0" in installed["on_disk"] and active != "v1.0":
+            print(
+                "  [WARN] v1.0 model is present but not active — "
+                "set model_path and voices_path in config.yaml to use it.",
+                file=sys.stderr,
+            )
+            result["hint"] = (
+                "v1.0 model is present but not active — "
+                "set model_path and voices_path in config.yaml"
+            )
         if config is not None:
             result["config"] = config
         _ok(result)
