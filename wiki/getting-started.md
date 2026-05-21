@@ -147,6 +147,12 @@ audio/outro/my-essay-outro.mp3
 
 The post name in the filename is the Markdown filename stem without `.md` — so `posts/my-essay.md` → `my-essay`. Post-specific files take priority over default files. Narrator automatically normalizes the loudness of all three segments before combining them.
 
+**Updated your intro or outro after already generating the post?** Use `remix` instead of re-generating — it re-runs only the mix and encode steps using the saved body audio, which takes seconds rather than the full synthesis time:
+
+```bash
+python narrator.py remix posts/my-essay.md
+```
+
 ---
 
 ## Using the UI instead of the CLI

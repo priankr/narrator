@@ -182,6 +182,23 @@ python narrator.py generate <post.md> [OPTIONS]
 | `--dry-run` | Validate all inputs and print the resolved plan without running the pipeline |
 | `--progress` | Emit JSON progress events to stdout during synthesis |
 
+### `remix`
+
+```bash
+python narrator.py remix <post.md> [OPTIONS]
+```
+
+Re-runs mixing and encoding using the body WAV saved by a previous `generate` run. Use this when you update an intro or outro file and want to produce a new final output without re-synthesizing — remix takes seconds instead of the full synthesis time.
+
+| Option | Description |
+|--------|-------------|
+| `--format mp3\|m4a\|wav` | Output format (overrides `config.yaml`) |
+| `--no-intro` | Skip intro even if a file exists |
+| `--no-outro` | Skip outro even if a file exists |
+| `--output PATH` | Exact output file path |
+
+`remix` always overwrites the existing output file. If the body WAV doesn't exist (i.e. `generate` has not been run for this post yet), it will exit with an error — run `generate` first.
+
 ### `voices`
 
 ```bash
@@ -264,3 +281,5 @@ python narrator.py generate posts/my-essay.md --force
 ```
 
 Cached segments are stored in `audio/raw/{post-name}/` and can be safely deleted at any time.
+
+> **Note:** `generate` always saves an assembled body WAV at `audio/raw/{post-name}/{post-name}-body.wav`, regardless of whether `--cache-segments` is used. This file is what `remix` uses. If you delete it, you will need to run `generate` again before `remix` will work.

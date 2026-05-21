@@ -60,6 +60,7 @@ All commands print a single JSON line to stdout. Parse that for results. Ignore 
 | `status` | List all posts with their synthesis cache and output state |
 | `voices` | List voices annotated with `available` and `requires_model` |
 | `generate <post.md>` | Run the full pipeline and produce an audio file |
+| `remix <post.md>` | Re-mix intro/outro with an existing body WAV without re-synthesizing |
 | `setup` | Download Kokoro model files (run once after install) |
 | `setup --multilingual` | Download the v1.0 model (54 voices, 9 languages) |
 | `setup --show-urls` | Print download URLs as JSON without downloading |

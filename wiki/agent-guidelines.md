@@ -110,6 +110,31 @@ python narrator.py generate <post-path> [options]
 
 ---
 
+#### `remix`
+
+Re-runs mixing and encoding using the body WAV saved by a previous `generate` run. Use this when you have updated an intro or outro file and want to produce a new final output without re-synthesizing the post — remix takes seconds rather than the full synthesis time.
+
+```bash
+python narrator.py remix <post-path> [options]
+```
+
+**Required argument:**
+- `<post-path>` — path to the `.md` file (same as `generate`; used to resolve the post name and locate the body WAV)
+
+**Options:**
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--format` | `mp3` \| `m4a` \| `wav` | config value | Output audio format |
+| `--no-intro` | flag | off | Skip intro clip even if one exists |
+| `--no-outro` | flag | off | Skip outro clip even if one exists |
+| `--post-name` | string | derived from filename | Override the slug used to locate the body WAV and name the output file |
+| `--output` | path | derived from slug + format | Exact output file path |
+
+`remix` always overwrites the existing output file — `--force` is not needed and not accepted. If no body WAV exists at `audio/raw/{post-name}/{post-name}-body.wav` (i.e. `generate` has never been run for this post), the command exits with an error.
+
+---
+
 #### `config`
 
 Prints the resolved configuration as JSON without running any checks.
@@ -309,6 +334,24 @@ The final `{"status": "ok", ...}` line follows immediately after `encode_done`.
 }
 ```
 
+#### `remix` — success
+```json
+{
+  "status": "ok",
+  "post": "posts/my-essay.md",
+  "output_path": "audio/output/my-essay.mp3",
+  "duration_sec": 187,
+  "format": "mp3"
+}
+```
+
+`remix` does not include `"voice"` in the response — synthesis is not performed.
+
+#### `remix` — body WAV not found
+```json
+{"status": "error", "message": "Body WAV not found at audio/raw/my-essay/my-essay-body.wav — run `generate` first to synthesize the post."}
+```
+
 #### Any command — error
 ```json
 {"status": "error", "message": "human-readable description of what went wrong"}
@@ -359,6 +402,7 @@ There are no other exit codes. Always check the exit code before parsing stdout.
 | `Invalid config.yaml` | Surface the specific issue list to the user; do not modify `config.yaml` autonomously |
 | `No text found after preprocessing` | The Markdown file is empty or contains only code/images; surface to user |
 | `output already exists` (status: skipped) | Not an error — file is done. Use `--force` only if regeneration was explicitly requested |
+| `Body WAV not found` | Run `generate` first; `remix` requires a prior successful synthesis |
 | Any other error | Surface `message` field to user verbatim; do not retry automatically |
 
 **Never retry a failed `generate` automatically.** Synthesis writes to disk; a retry without `--force` picks up from the last checkpoint, which may be correct behaviour — but only the user can confirm this.
@@ -388,7 +432,9 @@ narrator-app/
 
 The same pattern applies for outro files. The post name is the filename stem without `.md` — so `posts/my-essay.md` → `my-essay`. Files that don't match either pattern are silently skipped; verify the filename before running `generate` rather than relying on the stderr warning. See [`wiki/configuration.md`](configuration.md) for setup examples.
 
-**Never delete or modify anything inside `audio/raw/`.** The manifest and segment files are the resume mechanism. Corrupting them forces a full re-synthesis.
+**Never delete or modify anything inside `audio/raw/`.**
+- `{post-name}-body.wav` — the assembled body audio, always written by `generate` regardless of `--cache-segments`. Required by `remix` — deleting it forces a full re-synthesis before `remix` can be used again.
+- `segment-*.wav` and `manifest.json` — synthesis resume cache; only present when `--cache-segments` was used. Corrupting them forces a full re-synthesis.
 
 ---
 
@@ -452,8 +498,8 @@ Read the full source file before editing any stage. Changing a function signatur
 - **Entry:** `synthesize(paragraphs, post_name, provider, voice, speed, pause_ms, raw_dir, force, emit_progress, cache_segments) -> Path`
 - **Input:** paragraph list + config values + provider instance
 - **Output:** `Path` to assembled body WAV (`audio/raw/{post-name}/{post-name}-body.wav`)
-- **Side effects (default):** no segment files or manifest written; audio assembled in memory
-- **Side effects (with `cache_segments=True`):** writes `segment-*.wav` and `manifest.json` to `audio/raw/{post-name}/`
+- **Side effects (always):** writes `{post-name}-body.wav` to `audio/raw/{post-name}/`
+- **Side effects (with `cache_segments=True`):** additionally writes `segment-*.wav` and `manifest.json` to `audio/raw/{post-name}/`
 - **Resume logic:** only active when `cache_segments=True`; reads manifest on startup; skips completed segments; resets if voice or speed changed
 
 #### `pipeline/mixer.py`

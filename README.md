@@ -61,6 +61,7 @@ See [wiki/getting-started.md](wiki/getting-started.md) for a full walkthrough in
 - **Loudness normalization** — RMS-matches intro and outro to the body audio so volume is consistent across all three segments
 - **Intro/outro fades** — fades out the end of the intro and fades in the start of the outro for smooth transitions
 - **Volume control** — apply a dB gain adjustment to the final output
+- **Quick remix** — swap intro or outro and re-mix in seconds with `remix`, without re-running synthesis
 - **Resume-on-failure** — pass `--cache-segments` to write each paragraph to disk as it completes; a re-run skips already-finished paragraphs
 - **Multilingual narration** — optional [Kokoro v1.0 model](wiki/configuration.md#multilingual-model) adds support for Spanish, French, Hindi, Italian, Japanese, Brazilian Portuguese, and Mandarin Chinese
 
@@ -114,6 +115,7 @@ python narrator.py check    # verify environment; parse issues[] if exit code 1
 python narrator.py voices   # discover available voices before generating
 python narrator.py generate posts/my-post.md --dry-run   # validate inputs without synthesizing
 python narrator.py generate posts/my-post.md             # run the full pipeline
+python narrator.py remix posts/my-post.md                # re-mix with updated intro/outro (skips synthesis)
 ```
 
 | Reference | Purpose |

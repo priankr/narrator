@@ -319,6 +319,96 @@ def generate(post_path, voice, fmt, speed, no_intro, no_outro, raw_only, force, 
 
 
 @cli.command()
+@click.argument("post_path", type=click.Path(exists=True, dir_okay=False))
+@click.option(
+    "--format", "fmt", default=None,
+    type=click.Choice(SUPPORTED_FORMATS, case_sensitive=False),
+    help="Output format (overrides config.yaml)",
+)
+@click.option("--no-intro", is_flag=True, default=False, help="Skip intro audio")
+@click.option("--no-outro", is_flag=True, default=False, help="Skip outro audio")
+@click.option("--post-name", "post_name", default=None, help="Override slug derived from filename (^[a-z0-9][a-z0-9-]*$)")
+@click.option("--output", "output_override", default=None, type=click.Path(), help="Exact output file path (overrides derived path)")
+def remix(post_path, fmt, no_intro, no_outro, post_name, output_override):
+    """Re-mix intro/outro with the saved body WAV without re-synthesizing."""
+    try:
+        config = _load_config()
+
+        config_errors = validate_config(config)
+        if config_errors:
+            _err("Invalid config.yaml:\n" + "\n".join(f"  • {e}" for e in config_errors))
+
+        ffmpeg_err = check_ffmpeg()
+        if ffmpeg_err:
+            _err(ffmpeg_err)
+
+        fmt = (fmt or config["audio"]["output_format"]).lower()
+
+        post_path = Path(post_path)
+        post_name = post_name or post_path.stem
+        if not re.match(r'^[a-z0-9][a-z0-9-]*$', post_name):
+            _err(f"--post-name must match ^[a-z0-9][a-z0-9-]*$ (got {post_name!r})")
+
+        raw_dir = Path(config["paths"]["raw_output"])
+        output_dir = Path(config["paths"]["final_output"])
+
+        body_path = raw_dir / post_name / f"{post_name}-body.wav"
+        if not body_path.exists():
+            _err(
+                f"Body WAV not found at {body_path} — "
+                "run `generate` first to synthesize the post."
+            )
+
+        if output_override:
+            output_path = Path(output_override)
+            if output_path.suffix:
+                inferred_fmt = output_path.suffix.lstrip(".").lower()
+                if inferred_fmt in SUPPORTED_FORMATS:
+                    fmt = inferred_fmt
+                else:
+                    _err(f"Unsupported output format {inferred_fmt!r}. Supported: {', '.join(SUPPORTED_FORMATS)}")
+            else:
+                output_path = output_path.with_suffix(f".{fmt}")
+        else:
+            output_path = output_dir / f"{post_name}.{fmt}"
+
+        print("Mixing audio...", file=sys.stderr)
+        mix_input = mix(
+            body_path=body_path,
+            post_name=post_name,
+            intro_dir=Path(config["paths"]["intro"]),
+            outro_dir=Path(config["paths"]["outro"]),
+            normalize=config["audio"]["normalize_loudness"],
+            fade_duration_ms=config["audio"].get("fade_duration_ms", 2000),
+            skip_intro=no_intro,
+            skip_outro=no_outro,
+            force=True,
+        )
+
+        print(f"Encoding to {fmt}...", file=sys.stderr)
+        from pydub import AudioSegment
+        audio = AudioSegment.from_wav(str(mix_input))
+        duration_sec = int(len(audio) / 1000)
+
+        volume_db = config["audio"].get("volume_db", 0)
+        final_path = encode(mix_input, output_path, fmt, volume_db=volume_db)
+        print(f"Done: {final_path}", file=sys.stderr)
+
+        _ok({
+            "status": "ok",
+            "post": str(post_path),
+            "output_path": str(final_path),
+            "duration_sec": duration_sec,
+            "format": fmt,
+        })
+
+    except FileNotFoundError as exc:
+        _err(str(exc))
+    except Exception as exc:
+        _err(str(exc))
+
+
+@cli.command()
 def voices():
     """List available voices for the configured TTS provider."""
     try:

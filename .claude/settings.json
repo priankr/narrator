@@ -7,6 +7,7 @@
       "Bash(python narrator.py config)",
       "Bash(python narrator.py setup --show-urls)",
       "Bash(python narrator.py generate * --dry-run)",
+      "Bash(python narrator.py remix *)",
       "Bash(pytest -m \"not slow\")"
     ]
   }
