@@ -1,4 +1,9 @@
 import re
+from pathlib import Path
+
+import yaml
+
+_ABBREVIATION_PATTERNS: list | None = None
 
 
 def preprocess(text: str) -> list[str]:
@@ -14,11 +19,47 @@ def preprocess(text: str) -> list[str]:
     text = _strip_blockquote_markers(text)
     text = _strip_horizontal_rules(text)
     text = _strip_html_tags(text)
+    text = _expand_abbreviations(text)
     text = _normalize_whitespace(text)
     return _split_paragraphs(text)
 
 
 # --- private helpers ---------------------------------------------------------
+
+def _compile_patterns(expansions: dict) -> list:
+    """Compile an abbreviation dict to (pattern, replacement) pairs, longest key first."""
+    patterns = []
+    for abbrev, expansion in sorted(expansions.items(), key=lambda kv: -len(kv[0])):
+        escaped = re.escape(abbrev)
+        # Abbreviations with internal dots need a dot-blocking lookbehind to prevent
+        # matching inside longer dotted sequences (e.g. don't match "i.e." in "p.i.e.").
+        has_internal_dot = "." in abbrev.rstrip(".")
+        if has_internal_dot:
+            pattern = rf"(?<![a-zA-Z.]){escaped}(?![a-zA-Z])"
+        else:
+            pattern = rf"\b{escaped}(?![a-zA-Z])"
+        patterns.append((re.compile(pattern, re.IGNORECASE), expansion))
+    return patterns
+
+
+def _load_abbreviations(path: Path) -> list:
+    if not path.exists():
+        return []
+    with open(path, encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    return _compile_patterns(data.get("expansions", {}))
+
+
+def _expand_abbreviations(text: str, patterns: list | None = None) -> str:
+    global _ABBREVIATION_PATTERNS
+    if patterns is None:
+        if _ABBREVIATION_PATTERNS is None:
+            _ABBREVIATION_PATTERNS = _load_abbreviations(Path("abbreviations.yaml"))
+        patterns = _ABBREVIATION_PATTERNS
+    for pattern, expansion in patterns:
+        text = pattern.sub(expansion, text)
+    return text
+
 
 def _strip_frontmatter(text: str) -> str:
     return re.sub(r"^---\s*\n.*?\n---\s*\n", "", text, count=1, flags=re.DOTALL)

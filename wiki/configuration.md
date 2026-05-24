@@ -145,6 +145,37 @@ audio/
 
 ---
 
+## Customizing Pronunciation
+
+Some abbreviations are mispronounced by the TTS model — for example, saying the letters "e" and "g" instead of "for example". `abbreviations.yaml` in the project root lets you map any abbreviation to its spoken equivalent. The substitution happens during text preprocessing, before synthesis.
+
+```yaml
+# Map abbreviations to their spoken equivalents.
+# Matching is word-boundary-aware — partial matches inside longer words are ignored.
+
+expansions:
+  "e.g.": "for example"
+  "i.e.": "that is"
+  "et al.": "and others"
+  "vs.": "versus"
+  "approx.": "approximately"
+```
+
+To add an entry, open `abbreviations.yaml` and add a line under `expansions`:
+
+```yaml
+  "Dr.": "Doctor"
+  "Fig.": "Figure"
+  "No.": "Number"
+```
+
+**Matching rules:**
+- Matching is case-insensitive, so `"i.e."` also catches `"I.e."` at the start of a sentence.
+- Abbreviations embedded inside longer words or dotted sequences are never replaced — `"p.i.e."` will not trigger an `"i.e."` entry.
+- If the file does not exist, preprocessing continues without any substitutions.
+
+---
+
 ## Output Formats
 
 | Format | Best for |

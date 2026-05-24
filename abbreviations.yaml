@@ -1,0 +1,9 @@
+# Map abbreviations to their spoken equivalents.
+# Matching is word-boundary-aware — partial matches inside longer words are ignored.
+
+expansions:
+  "e.g.": "for example"
+  "i.e.": "that is"
+  "et al.": "and others"
+  "vs.": "versus"
+  "approx.": "approximately"

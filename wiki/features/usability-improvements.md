@@ -118,7 +118,73 @@ This renders the warning in the terminal-style progress block in the browser UI.
 
 ---
 
-## 3. Agent Configuration Files
+## 3. Intro/Outro Naming Warning
+
+### What changes
+
+When `mix()` finds audio files in the intro or outro directory that don't match the expected naming pattern, it prints a warning to stderr listing the unrecognized files and the patterns they should follow. Previously, misnamed files were silently skipped with no feedback.
+
+Expected patterns are `{post-name}-intro.*` (post-specific) and `default-intro.*` (shared fallback), and equivalently for outro. Any supported audio file in those directories that matches neither pattern triggers the warning.
+
+### Files to edit
+
+**`pipeline/mixer.py`** — after resolving the intro/outro directory, scan for audio files whose stems don't match either expected pattern and print a warning to stderr if any are found.
+
+### What does NOT change
+
+- Mix behaviour — unrecognized files are still ignored; the warning is informational only.
+- stdout JSON schema — the warning goes to stderr only.
+
+---
+
+## 4. Remix Command
+
+### What changes
+
+A new `remix` CLI command re-runs mix and encode using the saved body WAV without re-synthesizing. This is useful when a user updates an intro or outro file after generation — remix completes in seconds rather than re-running the full pipeline.
+
+`remix` requires a body WAV to already exist at `audio/raw/{post-name}/{post-name}-body.wav` (written by `generate`). If it is missing, the command errors with a clear message directing the user to run `generate` first.
+
+Flags mirror the audio-related subset of `generate`:
+
+| Flag | Purpose |
+|---|---|
+| `--format` | Output format (overrides `config.yaml`) |
+| `--no-intro` | Skip intro audio |
+| `--no-outro` | Skip outro audio |
+| `--post-name` | Override slug derived from filename |
+| `--output` | Exact output file path |
+
+JSON response on success:
+
+```json
+{
+  "status": "ok",
+  "post": "<post_path>",
+  "output_path": "<final_path>",
+  "duration_sec": 142,
+  "format": "mp3"
+}
+```
+
+### Files to edit
+
+**`narrator.py`** — add the `remix` command with the flags above. Locate the body WAV, error clearly if missing, then call `mix(force=True)` and `encode()`.
+
+**`wiki/agent-guidelines.md`** — document the `remix` command schema in section 1.3.
+
+**`AGENTS.md`** — add `remix` to the key commands table.
+
+**`.claude/settings.json`** — add `remix` to the pre-approved commands list.
+
+### What does NOT change
+
+- `mix()` and `encode()` — called with the same arguments as `generate`; no changes to those functions.
+- `generate` — unaffected.
+
+---
+
+## 6. Agent Configuration Files
 
 ### `.claude/commands/generate.md`
 
@@ -158,7 +224,44 @@ This means Gemini CLI autonomous agents get the same instructions as Codex, with
 
 ---
 
-## 4. Tests
+## 8. Abbreviation Expansion
+
+### What changes
+
+A YAML config file (`abbreviations.yaml`) lets users map written abbreviations to their spoken equivalents. During text preprocessing — after URL and Markdown stripping, before synthesis — any matching abbreviation is replaced with its expansion. Matching is word-boundary-aware so abbreviations embedded inside longer words or dotted sequences are never replaced.
+
+Default entries ship with the config:
+
+```yaml
+# Map abbreviations to their spoken expansions.
+# Matching is word-boundary-aware — partial matches inside longer words are ignored.
+
+expansions:
+  "e.g.": "for example"
+  "i.e.": "that is"
+  "et al.": "and others"
+  "vs.": "versus"
+  "approx.": "approximately"
+```
+
+Patterns are case-insensitive and applied longest-key-first.
+
+### Files to edit
+
+**`abbreviations.yaml`** (new file) — create with the default entries above.
+
+**`pipeline/preprocessor.py`** — load the config at startup, compile each entry into a regex, and apply substitutions after URL stripping.
+
+**`wiki/agent-guidelines.md`** — note that `abbreviations.yaml` exists and can be extended to fix any abbreviation the TTS model mispronounces.
+
+### What does NOT change
+
+- TTS model calls — the synthesizer receives clean expanded prose.
+- All other preprocessing steps — the abbreviation pass runs after them.
+
+---
+
+## 7. Tests
 
 **`tests/test_synthesizer_resume.py`** — add the following cases:
 
@@ -169,6 +272,15 @@ This means Gemini CLI autonomous agents get the same instructions as Codex, with
 | `test_default_run_body_wav_exists` | Default run still returns a `body_path` that exists on disk |
 | `test_default_run_body_wav_has_audio` | Returned WAV has nonzero size (in-memory assembly produced real output) |
 | `test_cache_segments_writes_segment_files` | `cache_segments=True` writes `segment-*.wav` files and `manifest.json` as before |
+| `test_misnamed_intro_triggers_warning` | A misnamed intro file produces a stderr warning listing the file and expected patterns |
+| `test_correctly_named_intro_no_warning` | A correctly named intro file produces no warning |
+| `test_remix_uses_existing_body_wav` | `remix` succeeds when a body WAV exists and produces an output file |
+| `test_remix_errors_when_body_wav_missing` | `remix` errors with a clear message when no body WAV is found |
+| `test_abbrev_replaced_in_prose` | `i.e.` and `e.g.` are expanded in normal prose |
+| `test_embedded_abbrev_not_replaced` | Abbreviations embedded in longer dotted sequences are left untouched |
+| `test_trailing_dot_abbrev_replaced` | `vs.` and `approx.` are expanded correctly |
+| `test_abbrev_case_insensitive` | Capitalised forms (e.g. `I.e.`) are also expanded |
+| `test_abbrev_longest_key_first` | A longer entry is not shadowed by a shorter overlapping one |
 
 ---
 
@@ -182,3 +294,12 @@ This means Gemini CLI autonomous agents get the same instructions as Codex, with
 6. `AGENTS.md` — add `--cache-segments` to the generate flags table.
 7. `.claude/commands/generate.md` — mention `--cache-segments` in step 3.
 8. `.gemini/settings.json` — create new file pointing Gemini CLI at `AGENTS.md`.
+9. `pipeline/mixer.py` — add naming pattern check and stderr warning.
+10. `narrator.py` — add `remix` command.
+11. `wiki/agent-guidelines.md` — document `remix` schema in section 1.3.
+12. `AGENTS.md` — add `remix` to the key commands table.
+13. `.claude/settings.json` — add `remix` to pre-approved commands.
+14. `abbreviations.yaml` — create with default entries.
+15. `pipeline/preprocessor.py` — load config, compile patterns, apply substitutions.
+16. `wiki/agent-guidelines.md` — document `abbreviations.yaml`.
+17. `tests/` — add all new test cases.

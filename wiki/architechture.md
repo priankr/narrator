@@ -77,6 +77,7 @@ Converts raw Markdown to a plain-text paragraph list before synthesis. Strips in
 9. Blockquote markers
 10. Horizontal rules
 11. HTML tags
+12. Abbreviation expansion (replaces entries from `abbreviations.yaml` with their spoken equivalents)
 
 Paragraphs are split on double newlines. Internal single newlines within a paragraph are collapsed to a space so a paragraph reads as one continuous sentence.
 

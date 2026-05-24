@@ -420,6 +420,7 @@ narrator-app/
 │   ├── raw/             ← READ ONLY: synthesis cache; do not modify
 │   └── output/          ← READ: final audio output
 ├── config.yaml          ← READ; only modify with explicit user instruction
+├── abbreviations.yaml   ← READ; users may add entries to fix TTS pronunciation
 ├── narrator.py          ← READ; entry point for CLI invocation
 ├── requirements.txt     ← READ; do not modify
 └── models/              ← DO NOT TOUCH: binary model files
@@ -593,6 +594,7 @@ pytest                  # all tests including end-to-end (requires Kokoro model 
 | File | Type | What it covers |
 |---|---|---|
 | `tests/test_preprocessor.py` | Unit | All Markdown stripping functions, paragraph splitting, edge cases |
+| `tests/test_abbreviations.py` | Unit | Abbreviation pattern compilation, boundary matching, and integration with `preprocess()` |
 | `tests/test_validate.py` | Unit | Config validation, ffmpeg check, file checks, voice/speed validation |
 | `tests/test_synthesizer_resume.py` | Unit (mock provider) | Manifest logic, segment skipping, force reset, voice change cache clear |
 | `tests/test_cli_output.py` | Integration | All command JSON shapes — real env (group A) and mocked pipeline (group B) |
