@@ -74,7 +74,8 @@ All commands print a single JSON line to stdout. Parse that for results. Ignore 
 | `--output <path>` | Write output to an exact path (format inferred from extension) |
 | `--progress` | Emit JSON progress events to stdout during synthesis |
 | `--force` | Discard cached segments and regenerate from scratch |
-| `--cache-segments` | Write segment files and manifest to disk; enables resume-on-failure (off by default) |
+| `--cache-segments` | Write segment files and manifest to disk; enables resume-on-failure (off by default). **Parallel synthesis is disabled when this flag is set.** |
+| `--workers N` | Number of parallel synthesis threads (default: `4`). Only applies when `--cache-segments` is not set. Pass `1` for sequential behaviour. |
 
 ---
 

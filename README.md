@@ -62,7 +62,7 @@ See [wiki/getting-started.md](wiki/getting-started.md) for a full walkthrough in
 - **Intro/outro fades** — fades out the end of the intro and fades in the start of the outro for smooth transitions
 - **Volume control** — apply a dB gain adjustment to the final output
 - **Quick remix** — swap intro or outro and re-mix in seconds with `remix`, without re-running synthesis
-- **Resume-on-failure** — pass `--cache-segments` to write each paragraph to disk as it completes; a re-run skips already-finished paragraphs
+- **Parallel synthesis** — paragraphs are synthesized concurrently (4 threads by default), reducing generation time for long posts by 2–4×; pass `--cache-segments` if you need resume-on-failure instead (that path runs sequentially)
 - **Multilingual narration** — optional [Kokoro v1.0 model](wiki/configuration.md#multilingual-model) adds support for Spanish, French, Hindi, Italian, Japanese, Brazilian Portuguese, and Mandarin Chinese
 
 All settings are controlled in `config.yaml`. See [wiki/configuration.md](wiki/configuration.md) for the full reference.
