@@ -172,6 +172,7 @@ To add an entry, open `abbreviations.yaml` and add a line under `expansions`:
 **Matching rules:**
 - Matching is case-insensitive, so `"i.e."` also catches `"I.e."` at the start of a sentence.
 - Abbreviations embedded inside longer words or dotted sequences are never replaced — `"p.i.e."` will not trigger an `"i.e."` entry.
+- Symbol keys (e.g. `"~"`) are matched when preceded by whitespace or punctuation, so `~100` is replaced but `a~b` is not.
 - If the file does not exist, preprocessing continues without any substitutions.
 
 ---

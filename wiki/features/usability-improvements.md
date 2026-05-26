@@ -244,7 +244,11 @@ expansions:
   "approx.": "approximately"
 ```
 
-Patterns are case-insensitive and applied longest-key-first.
+Patterns are case-insensitive and applied longest-key-first. Three pattern types are supported:
+
+- **Internal-dot keys** (`i.e.`, `e.g.`) — dot-blocking lookbehind prevents matching inside longer dotted sequences.
+- **Plain keys** (`vs.`, `approx.`) — standard word boundary.
+- **Symbol keys** (`~`) — `(?<!\w)` lookbehind so they match after spaces and punctuation but not mid-word.
 
 ### Files to edit
 

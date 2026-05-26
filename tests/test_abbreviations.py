@@ -53,6 +53,21 @@ def test_abbrev_after_punctuation():
     assert _expand_abbreviations("(i.e. a test)", patterns) == "(that is a test)"
 
 
+def test_symbol_key_replaced():
+    patterns = _compile_patterns({"~": "approximately"})
+    assert _expand_abbreviations("There are ~100 users.", patterns) == "There are approximately100 users."
+
+
+def test_symbol_key_after_punctuation():
+    patterns = _compile_patterns({"~": "approximately"})
+    assert _expand_abbreviations("(~50 items)", patterns) == "(approximately50 items)"
+
+
+def test_symbol_key_not_replaced_midword():
+    patterns = _compile_patterns({"~": "approximately"})
+    assert _expand_abbreviations("a~b", patterns) == "a~b"
+
+
 def test_no_abbreviations_file_is_harmless(tmp_path, monkeypatch):
     # When abbreviations.yaml does not exist the preprocessor should not raise
     monkeypatch.chdir(tmp_path)

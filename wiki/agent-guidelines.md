@@ -549,6 +549,7 @@ class TTSProvider(ABC):
 | New config key | `config.yaml` + `validate.py` (`validate_config`) + read in `narrator.py` |
 | New output format | `pipeline/encoder.py` (`SUPPORTED_FORMATS`, export logic) + `narrator.py` |
 | Preprocessing rule | `pipeline/preprocessor.py` (add a new `_strip_*` function, call it in `preprocess`) |
+| New abbreviation expansion | `abbreviations.yaml` (letter-based and symbol keys both supported) |
 | Pre-flight validation | `validate.py` + call site in `narrator.py` |
 
 ---

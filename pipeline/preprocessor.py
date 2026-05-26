@@ -31,10 +31,15 @@ def _compile_patterns(expansions: dict) -> list:
     patterns = []
     for abbrev, expansion in sorted(expansions.items(), key=lambda kv: -len(kv[0])):
         escaped = re.escape(abbrev)
-        # Abbreviations with internal dots need a dot-blocking lookbehind to prevent
-        # matching inside longer dotted sequences (e.g. don't match "i.e." in "p.i.e.").
+        # Three pattern types based on the key's first character and internal dots:
+        # - Symbol keys (e.g. "~"): use (?<!\w) so they match after spaces and punctuation
+        # - Internal-dot keys (e.g. "i.e."): dot-blocking lookbehind prevents matching inside
+        #   longer dotted sequences like "p.i.e."
+        # - Plain keys (e.g. "vs."): standard word boundary suffices
         has_internal_dot = "." in abbrev.rstrip(".")
-        if has_internal_dot:
+        if not abbrev[0].isalpha():
+            pattern = rf"(?<!\w){escaped}(?![a-zA-Z])"
+        elif has_internal_dot:
             pattern = rf"(?<![a-zA-Z.]){escaped}(?![a-zA-Z])"
         else:
             pattern = rf"\b{escaped}(?![a-zA-Z])"
