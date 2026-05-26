@@ -194,6 +194,5 @@ Once complete, an audio player appears so you can listen in the browser. Use the
 - **Adjust voice, speed, and output format** — see [configuration.md](configuration.md) for all available settings
 - **Adjust volume** — set `audio.volume_db` in `config.yaml` (e.g. `3` for louder, `-3` for quieter)
 - **Regenerate from scratch** — pass `--force` to clear the synthesis cache and start fresh
-- **Interrupted run?** — pass `--cache-segments` to write each paragraph to disk as it completes; re-running the same command will skip already-finished paragraphs. Note: parallel synthesis is disabled when `--cache-segments` is set — that path runs sequentially to preserve incremental checkpointing
-- **Faster generation for long posts** — paragraphs are synthesized in parallel by default (4 threads). Pass `--workers N` to increase or decrease the thread count. Use `--workers 1` to run sequentially if memory is constrained
+- **Interrupted run?** — pass `--cache-segments` to write each paragraph to disk as it completes; re-running the same command will skip already-finished paragraphs
 - **Fix a mispronounced abbreviation** — add an entry to `abbreviations.yaml` in the project root (e.g. `"Dr.": "Doctor"`); see [configuration.md](configuration.md) for details

@@ -98,8 +98,7 @@ python narrator.py generate <post-path> [options]
 | `--output` | path | derived from slug + format | Exact output file path; format inferred from extension if provided |
 | `--dry-run` | flag | off | Validate all inputs and print the resolved plan without running the pipeline |
 | `--progress` | flag | off | Emit JSON progress events to stdout during synthesis (see section 1.3) |
-| `--cache-segments` | flag | off | Write segment files and `manifest.json` to disk; enables resume-on-failure. **Parallel synthesis is disabled when this flag is set.** |
-| `--workers` | integer | `4` | Number of threads for parallel synthesis. Only applies when `--cache-segments` is not set. Pass `1` for sequential behaviour. |
+| `--cache-segments` | flag | off | Write segment files and `manifest.json` to disk; enables resume-on-failure |
 
 **Parameter validation rules:**
 - Speed outside `[0.5, 2.0]` → error before synthesis begins
@@ -299,8 +298,6 @@ When `--progress` is passed, JSON event lines are emitted to stdout before the t
 
 The `warn` event is emitted when the output file already exists but the run will proceed anyway (via `--force` or `--raw-only`). It appears after `preprocess_done` and before the first `segment_done`.
 
-**Note on `segment_done` ordering:** When `--workers > 1` (the default), paragraphs are synthesized in parallel. `segment_done` events are emitted in paragraph order after all futures resolve — not one-by-one as each thread completes. Agents parsing these events can rely on ascending `segment` values.
-
 The final `{"status": "ok", ...}` line follows immediately after `encode_done`.
 
 ---
@@ -320,8 +317,7 @@ The final `{"status": "ok", ...}` line follows immediately after `encode_done`.
   "skip_intro": false,
   "skip_outro": false,
   "force": false,
-  "cache_segments": false,
-  "workers": 4
+  "cache_segments": false
 }
 ```
 
@@ -500,13 +496,12 @@ Read the full source file before editing any stage. Changing a function signatur
 - **Side effects:** none (pure function)
 
 #### `pipeline/synthesizer.py`
-- **Entry:** `synthesize(paragraphs, post_name, provider, voice, speed, pause_ms, raw_dir, force, emit_progress, cache_segments, workers) -> Path`
+- **Entry:** `synthesize(paragraphs, post_name, provider, voice, speed, pause_ms, raw_dir, force, emit_progress, cache_segments) -> Path`
 - **Input:** paragraph list + config values + provider instance
 - **Output:** `Path` to assembled body WAV (`audio/raw/{post-name}/{post-name}-body.wav`)
 - **Side effects (always):** writes `{post-name}-body.wav` to `audio/raw/{post-name}/`
 - **Side effects (with `cache_segments=True`):** additionally writes `segment-*.wav` and `manifest.json` to `audio/raw/{post-name}/`
 - **Resume logic:** only active when `cache_segments=True`; reads manifest on startup; skips completed segments; resets if voice or speed changed
-- **Parallelism:** when `cache_segments=False` (default), paragraphs are synthesized concurrently using `workers` threads (default 4). When `cache_segments=True`, synthesis is strictly sequential regardless of `workers`.
 
 #### `pipeline/mixer.py`
 - **Entry:** `mix(body_path, post_name, intro_dir, outro_dir, normalize, fade_duration_ms, skip_intro, skip_outro, force) -> Path`

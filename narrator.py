@@ -142,9 +142,7 @@ def cli():
 @click.option("--progress", is_flag=True, default=False, help="Emit JSON progress events to stdout during synthesis")
 @click.option("--cache-segments", "cache_segments", is_flag=True, default=False,
               help="Write segment files and manifest to disk; enables resume-on-failure")
-@click.option("--workers", default=4, type=int, show_default=True,
-              help="Number of parallel synthesis threads. Ignored when --cache-segments is set.")
-def generate(post_path, voice, fmt, speed, no_intro, no_outro, raw_only, force, post_name, output_override, dry_run, progress, cache_segments, workers):
+def generate(post_path, voice, fmt, speed, no_intro, no_outro, raw_only, force, post_name, output_override, dry_run, progress, cache_segments):
     """Generate a narration for POST_PATH (a Markdown file)."""
     try:
         config = _load_config()
@@ -214,7 +212,6 @@ def generate(post_path, voice, fmt, speed, no_intro, no_outro, raw_only, force, 
                 "skip_outro": no_outro,
                 "force": force,
                 "cache_segments": cache_segments,
-                "workers": workers,
             })
             return
 
@@ -261,7 +258,6 @@ def generate(post_path, voice, fmt, speed, no_intro, no_outro, raw_only, force, 
             force=force,
             emit_progress=progress,
             cache_segments=cache_segments,
-            workers=workers,
         )
 
         if progress:

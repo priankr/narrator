@@ -1,5 +1,4 @@
 import io
-import threading
 import wave
 from pathlib import Path
 
@@ -70,24 +69,22 @@ class KokoroProvider(TTSProvider):
         self._model_path = Path(model_path) if model_path else DEFAULT_MODEL_PATH
         self._voices_path = Path(voices_path) if voices_path else DEFAULT_VOICES_PATH
         self._model = None
-        self._load_lock = threading.Lock()
 
     def _ensure_loaded(self) -> None:
-        with self._load_lock:
-            if self._model is not None:
-                return
-            if not self._model_path.exists():
-                raise FileNotFoundError(
-                    f"Kokoro model not found at '{self._model_path}'.\n"
-                    "Run 'python narrator.py setup' to download model files."
-                )
-            if not self._voices_path.exists():
-                raise FileNotFoundError(
-                    f"Kokoro voices file not found at '{self._voices_path}'.\n"
-                    "Run 'python narrator.py setup' to download model files."
-                )
-            from kokoro_onnx import Kokoro
-            self._model = Kokoro(str(self._model_path), str(self._voices_path))
+        if self._model is not None:
+            return
+        if not self._model_path.exists():
+            raise FileNotFoundError(
+                f"Kokoro model not found at '{self._model_path}'.\n"
+                "Run 'python narrator.py setup' to download model files."
+            )
+        if not self._voices_path.exists():
+            raise FileNotFoundError(
+                f"Kokoro voices file not found at '{self._voices_path}'.\n"
+                "Run 'python narrator.py setup' to download model files."
+            )
+        from kokoro_onnx import Kokoro
+        self._model = Kokoro(str(self._model_path), str(self._voices_path))
 
     def synthesize(self, text: str, voice: str, speed: float = 1.0) -> bytes:
         self._ensure_loaded()
