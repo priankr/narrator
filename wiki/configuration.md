@@ -213,6 +213,7 @@ python narrator.py generate <post.md> [OPTIONS]
 | `--output PATH` | Exact output file path; format inferred from the extension if provided |
 | `--dry-run` | Validate all inputs and print the resolved plan without running the pipeline |
 | `--progress` | Emit JSON progress events to stdout during synthesis |
+| `--workers N` | Number of parallel synthesis threads (default: `4`). Has no effect when `--cache-segments` is set — that path always runs sequentially. Pass `--workers 1` to synthesize paragraphs one at a time. |
 
 ### `remix`
 

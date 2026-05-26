@@ -1,6 +1,7 @@
 import io
 import json
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from pydub import AudioSegment
@@ -19,6 +20,7 @@ def synthesize(
     force: bool = False,
     emit_progress: bool = False,
     cache_segments: bool = False,
+    workers: int = 4,
 ) -> Path:
     """
     Synthesize each paragraph to WAV then assemble the full body WAV.
@@ -62,15 +64,27 @@ def synthesize(
         print("Assembling body audio...", file=sys.stderr)
         body_path = _assemble_from_disk(work_dir, total, pause_ms, body_path)
     else:
+        # Pre-filter empty paragraphs while keeping their original 1-based indices.
+        # The executor receives only non-empty paragraphs; progress events use original indices.
+        indexed = [(i, para) for i, para in enumerate(paragraphs, start=1) if para.strip()]
+
+        print(f"Synthesizing {len(indexed)} paragraphs with {workers} worker(s)...", file=sys.stderr)
+
+        def _synth(item: tuple[int, str]) -> tuple[int, bytes]:
+            idx, para = item
+            return idx, provider.synthesize(para, voice, speed)
+
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            results: list[tuple[int, bytes]] = list(executor.map(_synth, indexed))
+
+        # Results from map() arrive in submission order — sort is a safety net only.
+        results.sort(key=lambda r: r[0])
+
         segments: list[bytes] = []
-        for i, para in enumerate(paragraphs, start=1):
-            if not para.strip():
-                continue
-            print(f"[{i}/{total}] Synthesizing paragraph {i}...", file=sys.stderr)
-            wav_bytes = provider.synthesize(para, voice, speed)
+        for idx, wav_bytes in results:
             segments.append(wav_bytes)
             if emit_progress:
-                print(json.dumps({"event": "segment_done", "segment": i, "total": total, "voice": voice, "speed": speed}), flush=True)
+                print(json.dumps({"event": "segment_done", "segment": idx, "total": total, "voice": voice, "speed": speed}), flush=True)
 
         print("Assembling body audio...", file=sys.stderr)
         body_path = _assemble_from_memory(segments, pause_ms, body_path)
