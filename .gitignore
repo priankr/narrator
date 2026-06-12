@@ -26,6 +26,10 @@ build/
 venv/
 env/
 
+# Local Development Files
+CLAUDE.local.md
+wiki/features/
+
 # macOS
 .DS_Store
 

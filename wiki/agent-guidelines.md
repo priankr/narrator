@@ -607,7 +607,7 @@ When adding a new feature: write tests in the matching file. New CLI commands �
 
 ### 2.8 Future Work
 
-These are tracked in `wiki/features/agent-use-optimizations.md`. Do not implement them speculatively — implement only what the user asks for.
+Do not implement these speculatively — implement only what the user asks for.
 
 - MCP server wrapper exposing `generate_narration` as a tool
 - Batch processing: `generate posts/*.md`
